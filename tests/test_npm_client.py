@@ -66,3 +66,25 @@ def test_missing_env_raises(monkeypatch):
     monkeypatch.delenv("NPM_URL")
     with pytest.raises(KeyError):
         NPMClient()
+
+
+@respx.mock
+def test_second_401_raises():
+    """Second 401 after re-auth must raise, not loop."""
+    respx.post("http://npm.test/api/tokens").mock(
+        return_value=httpx.Response(200, json={"token": "new-tok"})
+    )
+    respx.get("http://npm.test/api/nginx/proxy-hosts").mock(
+        return_value=httpx.Response(401)
+    )
+    client = NPMClient()
+    client.token = "expired"
+    with pytest.raises(httpx.HTTPStatusError):
+        client.get("/nginx/proxy-hosts")
+
+
+@respx.mock
+def test_missing_email_env_raises(monkeypatch):
+    monkeypatch.delenv("NPM_EMAIL")
+    with pytest.raises(KeyError):
+        NPMClient()

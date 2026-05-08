@@ -12,11 +12,16 @@ class NPMClient:
         self._http = httpx.Client(timeout=30)
 
     def _authenticate(self) -> None:
-        resp = self._http.post(
-            f"{self.base_url}/api/tokens",
-            json={"identity": self._email, "secret": self._password},
-        )
-        resp.raise_for_status()
+        try:
+            resp = self._http.post(
+                f"{self.base_url}/api/tokens",
+                json={"identity": self._email, "secret": self._password},
+            )
+            resp.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise RuntimeError(
+                f"NPM authentication failed: HTTP {exc.response.status_code}"
+            ) from None
         self.token = resp.json()["token"]
 
     def _auth_headers(self) -> dict[str, str]:
@@ -40,6 +45,8 @@ class NPMClient:
                 **kwargs,
             )
         resp.raise_for_status()
+        if not resp.content:
+            return None
         return resp.json()
 
     def get(self, path: str, **kwargs: Any) -> Any:
@@ -53,3 +60,12 @@ class NPMClient:
 
     def delete(self, path: str, **kwargs: Any) -> Any:
         return self.request("DELETE", path, **kwargs)
+
+    def close(self) -> None:
+        self._http.close()
+
+    def __enter__(self) -> "NPMClient":
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        self.close()

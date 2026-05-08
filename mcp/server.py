@@ -15,7 +15,6 @@ if "mcp" not in sys.modules or not hasattr(sys.modules.get("mcp"), "McpError"):
             os.path.join(p, "mcp", "__init__.py")
         ) and not os.path.isfile(os.path.join(p, "mcp", "shared", "exceptions.py")))
     ]
-    import importlib
     # Remove any cached local mcp to force a clean lookup
     sys.modules.pop("mcp", None)
     import mcp as _real_mcp  # noqa: F401 — side effect: caches the real mcp

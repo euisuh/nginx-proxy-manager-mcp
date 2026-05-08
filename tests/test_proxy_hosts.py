@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 import pytest
 from tools.proxy_hosts import ProxyHostTools
 
@@ -41,6 +41,9 @@ def test_create_proxy_host(tools, client):
     assert payload["forward_host"] == "192.168.1.10"
     assert payload["forward_port"] == 3000
     assert payload["block_exploits"] is True
+    assert payload["advanced_config"] == ""
+    assert payload["meta"] == {}
+    assert payload["locations"] == []
 
 
 def test_update_proxy_host_merges_fields(tools, client):
@@ -56,6 +59,7 @@ def test_update_proxy_host_merges_fields(tools, client):
     put_payload = client.put.call_args[1]["json"]
     assert put_payload["forward_port"] == 443
     assert put_payload["domain_names"] == ["old.example.com"]
+    client.get.assert_called_once_with("/nginx/proxy-hosts/1")
 
 
 def test_delete_proxy_host(tools, client):

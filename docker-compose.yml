@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  app:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    ports:
+      - '80:80'    # Public HTTP Port
+      - '443:443'  # Public HTTPS Port
+      - '81:81'   # Admin Web Port
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+
+  npm-mcp:
+    build: ./mcp
+    restart: unless-stopped
+    environment:
+      NPM_URL: http://app:81
+      NPM_EMAIL: ${NPM_EMAIL}
+      NPM_PASSWORD: ${NPM_PASSWORD}
+    depends_on:
+      - app
+    ports:
+      - "127.0.0.1:8000:8000"

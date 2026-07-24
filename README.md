@@ -23,7 +23,7 @@ This server runs either:
 
 ## Features
 
-- 16 MCP tools for common NPM operations.
+- 30 MCP tools for common NPM operations.
 - `dry_run` previews for mutating tools, so an MCP client can show the exact NPM request before applying it.
 - JWT auth against the NPM API with in-memory token caching and automatic re-authentication on `401`.
 - Docker sidecar deployment that binds the MCP port to localhost by default.
@@ -36,6 +36,8 @@ This server runs either:
 |---|---|
 | Workflows | `create_proxy_host_with_letsencrypt` |
 | Proxy hosts | `list_proxy_hosts`, `get_proxy_host`, `create_proxy_host`, `update_proxy_host`, `delete_proxy_host`, `enable_proxy_host`, `disable_proxy_host` |
+| Redirection hosts | `list_redirection_hosts`, `get_redirection_host`, `create_redirection_host`, `update_redirection_host`, `delete_redirection_host`, `enable_redirection_host`, `disable_redirection_host` |
+| Streams | `list_streams`, `get_stream`, `create_stream`, `update_stream`, `delete_stream`, `enable_stream`, `disable_stream` |
 | SSL certs | `list_certificates`, `create_letsencrypt_cert`, `renew_certificate` |
 | Access lists | `list_access_lists`, `get_access_list`, `create_access_list`, `update_access_list`, `delete_access_list` |
 
@@ -199,7 +201,7 @@ See [ROADMAP.md](ROADMAP.md). Near-term priorities are safer mutating tools, a o
 
 ## Limitations
 
-- Covers proxy hosts, certificates, and access lists only. Redirection hosts, streams, 404 hosts, users, audit log, and settings are not implemented yet.
+- Covers proxy hosts, redirection hosts, streams, certificates, and access lists only. 404 hosts, users, audit log, and settings are not implemented yet.
 - Certificate creation supports Let's Encrypt HTTP-01 only — no DNS-01 challenge and no custom certificate upload yet.
 - One NPM instance per server process; there is no multi-tenant or multi-host routing.
 - Optional SSE bearer-token auth protects the HTTP endpoint, but there is no per-tool authorization after a client is authenticated.

@@ -28,6 +28,8 @@ from npm_client import NPMClient
 from tools.proxy_hosts import register_proxy_host_tools
 from tools.ssl_certs import register_ssl_cert_tools
 from tools.access_lists import register_access_list_tools
+from tools.redirection_hosts import register_redirection_host_tools
+from tools.streams import register_stream_tools
 
 
 def validate_env() -> None:
@@ -62,6 +64,8 @@ def build_server() -> FastMCP:
     register_proxy_host_tools(mcp, client)
     register_ssl_cert_tools(mcp, client)
     register_access_list_tools(mcp, client)
+    register_redirection_host_tools(mcp, client)
+    register_stream_tools(mcp, client)
     return mcp
 
 

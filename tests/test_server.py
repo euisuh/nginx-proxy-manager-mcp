@@ -18,3 +18,23 @@ def test_validate_env_passes_with_all_vars(monkeypatch):
     monkeypatch.setenv("NPM_PASSWORD", "testpass")
     from server import validate_env
     validate_env()  # should not raise
+
+
+def test_get_transport_defaults_to_sse(monkeypatch):
+    monkeypatch.delenv("MCP_TRANSPORT", raising=False)
+    from server import get_transport
+    assert get_transport() == "sse"
+
+
+def test_get_transport_accepts_stdio(monkeypatch):
+    monkeypatch.setenv("MCP_TRANSPORT", "stdio")
+    from server import get_transport
+    assert get_transport() == "stdio"
+
+
+def test_get_transport_rejects_unknown_value(monkeypatch):
+    monkeypatch.setenv("MCP_TRANSPORT", "websocket")
+    from server import get_transport
+    with pytest.raises(SystemExit) as exc:
+        get_transport()
+    assert exc.value.code == 1

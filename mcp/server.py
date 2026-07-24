@@ -36,6 +36,14 @@ def validate_env() -> None:
         sys.exit(1)
 
 
+def get_transport() -> str:
+    transport = os.environ.get("MCP_TRANSPORT", "sse").lower()
+    if transport not in {"sse", "stdio"}:
+        print("ERROR: MCP_TRANSPORT must be one of: sse, stdio", file=sys.stderr)
+        sys.exit(1)
+    return transport
+
+
 mcp = FastMCP("npm-mcp")
 
 
@@ -50,6 +58,10 @@ def build_server() -> FastMCP:
 
 if __name__ == "__main__":
     build_server()
-    host = os.environ.get("MCP_HOST", "0.0.0.0")
-    port = int(os.environ.get("MCP_PORT", "8000"))
-    mcp.run(transport="sse", host=host, port=port)
+    transport = get_transport()
+    if transport == "stdio":
+        mcp.run(transport="stdio")
+    else:
+        host = os.environ.get("MCP_HOST", "0.0.0.0")
+        port = int(os.environ.get("MCP_PORT", "8000"))
+        mcp.run(transport="sse", host=host, port=port)

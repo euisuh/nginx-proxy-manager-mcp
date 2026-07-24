@@ -5,6 +5,8 @@ if TYPE_CHECKING:
     from fastmcp import FastMCP
     from npm_client import NPMClient
 
+from tools.previews import dry_run_preview
+
 
 class ProxyHostTools:
     def __init__(self, client: NPMClient) -> None:
@@ -30,8 +32,9 @@ class ProxyHostTools:
         block_exploits: bool = True,
         caching_enabled: bool = False,
         allow_websocket_upgrade: bool = False,
+        dry_run: bool = False,
     ) -> dict:
-        """Create a new proxy host. forward_scheme must be 'http' or 'https'."""
+        """Create a new proxy host. Set dry_run=True to preview without changing NPM."""
         payload = {
             "domain_names": domain_names,
             "forward_scheme": forward_scheme,
@@ -47,6 +50,8 @@ class ProxyHostTools:
             "meta": {},
             "locations": [],
         }
+        if dry_run:
+            return dry_run_preview("POST", "/nginx/proxy-hosts", payload)
         return self.client.post("/nginx/proxy-hosts", json=payload)
 
     def update_proxy_host(
@@ -62,8 +67,9 @@ class ProxyHostTools:
         block_exploits: Optional[bool] = None,
         caching_enabled: Optional[bool] = None,
         allow_websocket_upgrade: Optional[bool] = None,
+        dry_run: bool = False,
     ) -> dict:
-        """Update fields on a proxy host. Only provided fields are changed."""
+        """Update fields on a proxy host. Set dry_run=True to preview the merged payload."""
         existing = self.client.get(f"/nginx/proxy-hosts/{id}")
         updates = {
             k: v
@@ -82,18 +88,26 @@ class ProxyHostTools:
             if v is not None
         }
         existing.update(updates)
+        if dry_run:
+            return dry_run_preview("PUT", f"/nginx/proxy-hosts/{id}", existing)
         return self.client.put(f"/nginx/proxy-hosts/{id}", json=existing)
 
-    def delete_proxy_host(self, id: int) -> bool:
-        """Delete a proxy host permanently."""
+    def delete_proxy_host(self, id: int, dry_run: bool = False) -> bool | dict:
+        """Delete a proxy host permanently. Set dry_run=True to preview only."""
+        if dry_run:
+            return dry_run_preview("DELETE", f"/nginx/proxy-hosts/{id}")
         return self.client.delete(f"/nginx/proxy-hosts/{id}")
 
-    def enable_proxy_host(self, id: int) -> dict:
-        """Enable a previously disabled proxy host."""
+    def enable_proxy_host(self, id: int, dry_run: bool = False) -> dict:
+        """Enable a previously disabled proxy host. Set dry_run=True to preview only."""
+        if dry_run:
+            return dry_run_preview("POST", f"/nginx/proxy-hosts/{id}/enable")
         return self.client.post(f"/nginx/proxy-hosts/{id}/enable")
 
-    def disable_proxy_host(self, id: int) -> dict:
-        """Disable a proxy host without deleting it."""
+    def disable_proxy_host(self, id: int, dry_run: bool = False) -> dict:
+        """Disable a proxy host without deleting it. Set dry_run=True to preview only."""
+        if dry_run:
+            return dry_run_preview("POST", f"/nginx/proxy-hosts/{id}/disable")
         return self.client.post(f"/nginx/proxy-hosts/{id}/disable")
 
 

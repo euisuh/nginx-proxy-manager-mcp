@@ -1,6 +1,8 @@
 # Nginx Proxy Manager MCP
 
 [![CI](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/ci.yml)
+[![Docker](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/docker.yml/badge.svg)](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/docker.yml)
+[![Python Package](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/python-package.yml/badge.svg)](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/python-package.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 An MCP server for [Nginx Proxy Manager](https://nginxproxymanager.com/). It lets Claude and other MCP clients manage reverse-proxy hosts, Let's Encrypt certificates, and access lists through typed tools instead of clicking through the NPM admin UI.
@@ -29,6 +31,7 @@ This server runs either:
 - Docker sidecar deployment that binds the MCP port to localhost by default.
 - Offline pytest suite with mocked NPM API responses.
 - Ruff quality gate and contributor templates for public maintenance.
+- Python wheel build validation and MCP directory metadata for promotion readiness.
 - No token persistence and no hardcoded credentials.
 
 ## Tools
@@ -96,6 +99,27 @@ Or add it manually to an MCP client config:
 ```
 
 More examples live in [`examples/`](examples/): Claude Desktop, Claude Code, Cursor, and Windsurf.
+
+## Quick start: uvx / pipx
+
+If you do not want Docker, run the packaged stdio entry point from a local checkout:
+
+```bash
+git clone https://github.com/euisuh/nginx-proxy-manager-mcp.git
+cd nginx-proxy-manager-mcp
+
+NPM_URL=http://localhost:81 \
+NPM_EMAIL=admin@example.com \
+NPM_PASSWORD=... \
+MCP_TRANSPORT=stdio \
+uvx --from . nginx-proxy-manager-mcp
+```
+
+Or install it into an isolated environment:
+
+```bash
+pipx install .
+```
 
 ## Quick start: stdio
 
@@ -201,7 +225,12 @@ See [SECURITY.md](SECURITY.md) for reporting and deployment guidance.
 
 ## Roadmap
 
-See [ROADMAP.md](ROADMAP.md). Near-term priorities are clean Python packaging, MCP directory metadata, broader NPM resource coverage, and integration tests.
+See [ROADMAP.md](ROADMAP.md). Near-term priorities are PyPI publishing, MCP directory submission, broader NPM resource coverage, and integration tests.
+
+## Directory metadata
+
+- [`smithery.yaml`](smithery.yaml) describes stdio launch configuration for Smithery-style MCP directories.
+- [`glama.json`](glama.json) declares the repository maintainer for Glama MCP registry verification.
 
 ## Limitations
 

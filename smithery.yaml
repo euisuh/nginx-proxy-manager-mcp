@@ -1,0 +1,38 @@
+# Smithery.ai configuration: https://smithery.ai/docs/build/project-config/smithery-yaml
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    required:
+      - npmUrl
+      - npmEmail
+      - npmPassword
+    properties:
+      npmUrl:
+        type: string
+        title: NPM URL
+        description: Base URL for the Nginx Proxy Manager admin API.
+        default: http://localhost:81
+      npmEmail:
+        type: string
+        title: NPM admin email
+        description: Existing Nginx Proxy Manager admin email.
+      npmPassword:
+        type: string
+        title: NPM admin password
+        description: Existing Nginx Proxy Manager admin password.
+  commandFunction: |-
+    (config) => ({
+      command: 'python',
+      args: ['-m', 'nginx_proxy_manager_mcp.server'],
+      env: {
+        NPM_URL: config.npmUrl,
+        NPM_EMAIL: config.npmEmail,
+        NPM_PASSWORD: config.npmPassword,
+        MCP_TRANSPORT: 'stdio'
+      }
+    })
+  exampleConfig:
+    npmUrl: http://localhost:81
+    npmEmail: admin@example.com
+    npmPassword: replace-me

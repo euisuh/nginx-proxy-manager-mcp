@@ -69,6 +69,7 @@ services:
       MCP_TRANSPORT: sse
       MCP_HOST: 0.0.0.0
       MCP_PORT: 8000
+      MCP_BEARER_TOKEN: ${MCP_BEARER_TOKEN:-}
     ports:
       - "127.0.0.1:8000:8000"
 ```
@@ -135,6 +136,7 @@ Example client config:
 | `MCP_TRANSPORT` | no | `sse` | MCP transport: `sse` or `stdio` |
 | `MCP_HOST` | no | `0.0.0.0` | Bind address for SSE mode |
 | `MCP_PORT` | no | `8000` | Bind port for SSE mode |
+| `MCP_BEARER_TOKEN` | no | — | Optional bearer token required for SSE HTTP requests |
 
 Missing required variables make the server exit with a clear error at startup rather than fail on the first API call.
 
@@ -184,6 +186,7 @@ Anything that can reach this MCP server has admin-level control over your proxy 
 
 - Do not expose the MCP endpoint publicly.
 - Keep the Docker port bound to `127.0.0.1` unless you have another trusted network boundary.
+- Set `MCP_BEARER_TOKEN` for SSE deployments that can be reached by anything beyond the local machine, and configure clients to send `Authorization: Bearer <token>`.
 - Use environment variables or a secrets manager for NPM credentials; do not commit `.env`.
 - The NPM admin JWT lives in process memory and is never written to disk.
 - The container runs as a non-root user.
@@ -199,7 +202,7 @@ See [ROADMAP.md](ROADMAP.md). Near-term priorities are safer mutating tools, a o
 - Covers proxy hosts, certificates, and access lists only. Redirection hosts, streams, 404 hosts, users, audit log, and settings are not implemented yet.
 - Certificate creation supports Let's Encrypt HTTP-01 only — no DNS-01 challenge and no custom certificate upload yet.
 - One NPM instance per server process; there is no multi-tenant or multi-host routing.
-- No built-in per-tool authorization. The server trusts whatever MCP client connects to it.
+- Optional SSE bearer-token auth protects the HTTP endpoint, but there is no per-tool authorization after a client is authenticated.
 - Written against the NPM v2 API; older or forked NPM builds may differ.
 
 ## Contributing

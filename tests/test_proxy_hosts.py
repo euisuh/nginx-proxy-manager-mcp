@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 import pytest
-from tools.proxy_hosts import ProxyHostTools
+from nginx_proxy_manager_mcp.tools.proxy_hosts import ProxyHostTools
 
 
 @pytest.fixture

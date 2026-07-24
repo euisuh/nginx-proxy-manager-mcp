@@ -9,7 +9,7 @@ git clone https://github.com/euisuh/nginx-proxy-manager-mcp.git
 cd nginx-proxy-manager-mcp
 python -m venv .venv
 . .venv/bin/activate
-pip install -r mcp/requirements.txt -r mcp/requirements-dev.txt
+pip install -e . -r requirements-dev.txt
 ```
 
 ## Quality checks

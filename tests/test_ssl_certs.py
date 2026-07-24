@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 import pytest
-from tools.ssl_certs import SSLCertTools
+from nginx_proxy_manager_mcp.tools.ssl_certs import SSLCertTools
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 import pytest
-from tools.streams import StreamTools
+from nginx_proxy_manager_mcp.tools.streams import StreamTools
 
 
 @pytest.fixture

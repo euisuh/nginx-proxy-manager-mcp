@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from npm_client import NPMClient
 
 from tools.previews import dry_run_preview
+from validation import validate_domain_names, validate_email, validate_positive_id
 
 
 class SSLCertTools:
@@ -24,6 +25,8 @@ class SSLCertTools:
         dry_run: bool = False,
     ) -> dict:
         """Request a Let's Encrypt certificate. Set dry_run=True to preview only."""
+        validate_domain_names(domain_names)
+        validate_email(email)
         payload = {
             "provider": "letsencrypt",
             "domain_names": domain_names,
@@ -39,6 +42,7 @@ class SSLCertTools:
 
     def renew_certificate(self, id: int, dry_run: bool = False) -> dict:
         """Trigger certificate renewal. Set dry_run=True to preview only."""
+        validate_positive_id(id)
         if dry_run:
             return dry_run_preview("POST", f"/nginx/certificates/{id}/renew")
         return self.client.post(f"/nginx/certificates/{id}/renew")

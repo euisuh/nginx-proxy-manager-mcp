@@ -17,6 +17,9 @@ services:
       NPM_URL: http://app:81
       NPM_EMAIL: ${NPM_EMAIL}
       NPM_PASSWORD: ${NPM_PASSWORD}
+      MCP_TRANSPORT: sse
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 8000
     depends_on:
       - app
     ports:

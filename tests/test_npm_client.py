@@ -1,7 +1,7 @@
 import pytest
 import respx
 import httpx
-from npm_client import NPMAPIError, NPMClient
+from nginx_proxy_manager_mcp.npm_client import NPMAPIError, NPMClient
 
 
 @pytest.fixture(autouse=True)

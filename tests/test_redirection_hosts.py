@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 import pytest
-from tools.redirection_hosts import RedirectionHostTools
+from nginx_proxy_manager_mcp.tools.redirection_hosts import RedirectionHostTools
 
 
 @pytest.fixture

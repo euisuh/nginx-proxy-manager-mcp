@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 import pytest
-from tools.access_lists import AccessListTools
+from nginx_proxy_manager_mcp.tools.access_lists import AccessListTools
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 import pytest
 
-from validation import (
+from nginx_proxy_manager_mcp.validation import (
     validate_access_clients,
     validate_domain_names,
     validate_forward_scheme,

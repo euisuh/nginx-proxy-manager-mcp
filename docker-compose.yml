@@ -11,7 +11,7 @@ services:
       - ./letsencrypt:/etc/letsencrypt
 
   nginx-proxy-manager-mcp:
-    build: ./mcp
+    build: .
     restart: unless-stopped
     environment:
       NPM_URL: http://app:81

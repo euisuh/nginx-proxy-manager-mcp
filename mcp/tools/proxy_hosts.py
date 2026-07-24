@@ -6,6 +6,15 @@ if TYPE_CHECKING:
     from npm_client import NPMClient
 
 from tools.previews import dry_run_preview
+from validation import (
+    validate_domain_names,
+    validate_email,
+    validate_forward_scheme,
+    validate_host,
+    validate_optional_positive_id,
+    validate_port,
+    validate_positive_id,
+)
 
 
 class ProxyHostTools:
@@ -18,6 +27,7 @@ class ProxyHostTools:
 
     def get_proxy_host(self, id: int) -> dict:
         """Get a single proxy host by ID."""
+        validate_positive_id(id)
         return self.client.get(f"/nginx/proxy-hosts/{id}")
 
     def create_proxy_host(
@@ -35,6 +45,12 @@ class ProxyHostTools:
         dry_run: bool = False,
     ) -> dict:
         """Create a new proxy host. Set dry_run=True to preview without changing NPM."""
+        validate_domain_names(domain_names)
+        validate_forward_scheme(forward_scheme)
+        validate_host(forward_host, "forward_host")
+        validate_port(forward_port, "forward_port")
+        validate_optional_positive_id(certificate_id, "certificate_id")
+        validate_optional_positive_id(access_list_id, "access_list_id")
         payload = {
             "domain_names": domain_names,
             "forward_scheme": forward_scheme,
@@ -68,6 +84,12 @@ class ProxyHostTools:
         dry_run: bool = False,
     ) -> dict:
         """Create a Let's Encrypt certificate, then create an HTTPS-forced proxy host."""
+        validate_domain_names(domain_names)
+        validate_forward_scheme(forward_scheme)
+        validate_host(forward_host, "forward_host")
+        validate_port(forward_port, "forward_port")
+        validate_email(email)
+        validate_optional_positive_id(access_list_id, "access_list_id")
         cert_payload = {
             "provider": "letsencrypt",
             "domain_names": domain_names,
@@ -156,6 +178,17 @@ class ProxyHostTools:
         dry_run: bool = False,
     ) -> dict:
         """Update fields on a proxy host. Set dry_run=True to preview the merged payload."""
+        validate_positive_id(id)
+        if domain_names is not None:
+            validate_domain_names(domain_names)
+        if forward_scheme is not None:
+            validate_forward_scheme(forward_scheme)
+        if forward_host is not None:
+            validate_host(forward_host, "forward_host")
+        if forward_port is not None:
+            validate_port(forward_port, "forward_port")
+        validate_optional_positive_id(certificate_id, "certificate_id")
+        validate_optional_positive_id(access_list_id, "access_list_id")
         existing = self.client.get(f"/nginx/proxy-hosts/{id}")
         updates = {
             k: v
@@ -180,18 +213,21 @@ class ProxyHostTools:
 
     def delete_proxy_host(self, id: int, dry_run: bool = False) -> bool | dict:
         """Delete a proxy host permanently. Set dry_run=True to preview only."""
+        validate_positive_id(id)
         if dry_run:
             return dry_run_preview("DELETE", f"/nginx/proxy-hosts/{id}")
         return self.client.delete(f"/nginx/proxy-hosts/{id}")
 
     def enable_proxy_host(self, id: int, dry_run: bool = False) -> dict:
         """Enable a previously disabled proxy host. Set dry_run=True to preview only."""
+        validate_positive_id(id)
         if dry_run:
             return dry_run_preview("POST", f"/nginx/proxy-hosts/{id}/enable")
         return self.client.post(f"/nginx/proxy-hosts/{id}/enable")
 
     def disable_proxy_host(self, id: int, dry_run: bool = False) -> dict:
         """Disable a proxy host without deleting it. Set dry_run=True to preview only."""
+        validate_positive_id(id)
         if dry_run:
             return dry_run_preview("POST", f"/nginx/proxy-hosts/{id}/disable")
         return self.client.post(f"/nginx/proxy-hosts/{id}/disable")

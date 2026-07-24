@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from npm_client import NPMClient
 
 from tools.previews import dry_run_preview
+from validation import validate_access_clients, validate_access_items, validate_positive_id
 
 
 class AccessListTools:
@@ -18,6 +19,7 @@ class AccessListTools:
 
     def get_access_list(self, id: int) -> dict:
         """Get access list detail including IP rules and basic auth users."""
+        validate_positive_id(id)
         return self.client.get(f"/nginx/access-lists/{id}")
 
     def create_access_list(
@@ -34,12 +36,14 @@ class AccessListTools:
         clients: [{"address": "1.2.3.4", "directive": "allow|deny"}]
         items: [{"username": "user", "password": "pass"}]
         """
+        validated_clients = validate_access_clients(clients)
+        validated_items = validate_access_items(items)
         payload = {
             "name": name,
             "satisfy_any": satisfy_any,
             "pass_auth": pass_auth,
-            "clients": clients or [],
-            "items": items or [],
+            "clients": validated_clients,
+            "items": validated_items,
         }
         if dry_run:
             return dry_run_preview("POST", "/nginx/access-lists", payload)
@@ -56,6 +60,11 @@ class AccessListTools:
         dry_run: bool = False,
     ) -> dict:
         """Update an access list. Set dry_run=True to preview the merged payload."""
+        validate_positive_id(id)
+        if clients is not None:
+            validate_access_clients(clients)
+        if items is not None:
+            validate_access_items(items)
         existing = self.client.get(f"/nginx/access-lists/{id}")
         updates = {
             k: v
@@ -75,6 +84,7 @@ class AccessListTools:
 
     def delete_access_list(self, id: int, dry_run: bool = False) -> bool | dict:
         """Delete an access list. Set dry_run=True to preview only."""
+        validate_positive_id(id)
         if dry_run:
             return dry_run_preview("DELETE", f"/nginx/access-lists/{id}")
         return self.client.delete(f"/nginx/access-lists/{id}")

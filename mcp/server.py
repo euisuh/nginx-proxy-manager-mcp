@@ -55,6 +55,10 @@ def get_sse_middleware() -> list[Middleware]:
     return [Middleware(BearerTokenAuthMiddleware, token=token)]
 
 
+def get_host() -> str:
+    return os.environ.get("MCP_HOST", "127.0.0.1")
+
+
 mcp = FastMCP("nginx-proxy-manager-mcp")
 
 
@@ -75,6 +79,6 @@ if __name__ == "__main__":
     if transport == "stdio":
         mcp.run(transport="stdio")
     else:
-        host = os.environ.get("MCP_HOST", "0.0.0.0")
+        host = get_host()
         port = int(os.environ.get("MCP_PORT", "8000"))
         mcp.run(transport="sse", host=host, port=port, middleware=get_sse_middleware())

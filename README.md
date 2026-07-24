@@ -169,6 +169,8 @@ Example client config:
 
 Missing required variables make the server exit with a clear error at startup rather than fail on the first API call.
 
+SSE mode also exposes `GET /healthz`, an unauthenticated liveness endpoint that returns a small JSON response. It does not contact NPM or validate credentials; use it for container and reverse-proxy health checks only.
+
 ## Architecture
 
 ```text
@@ -238,6 +240,7 @@ See [ROADMAP.md](ROADMAP.md). Near-term priorities are PyPI publishing, MCP dire
 - Certificate creation supports Let's Encrypt HTTP-01 only — no DNS-01 challenge and no custom certificate upload yet.
 - One NPM instance per server process; there is no multi-tenant or multi-host routing.
 - Optional SSE bearer-token auth protects the HTTP endpoint, but there is no per-tool authorization after a client is authenticated.
+- `/healthz` reports only process liveness, not NPM reachability.
 - Written against the NPM v2 API; older or forked NPM builds may differ.
 
 ## Contributing

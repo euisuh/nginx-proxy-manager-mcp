@@ -1,5 +1,4 @@
 import pytest
-import os
 
 
 def test_validate_env_fails_on_missing_vars(monkeypatch):

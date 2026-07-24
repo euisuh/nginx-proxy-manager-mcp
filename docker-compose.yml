@@ -10,7 +10,7 @@ services:
       - ./data:/data
       - ./letsencrypt:/etc/letsencrypt
 
-  npm-mcp:
+  nginx-proxy-manager-mcp:
     build: ./mcp
     restart: unless-stopped
     environment:

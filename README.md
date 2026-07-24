@@ -1,6 +1,6 @@
 # Nginx Proxy Manager MCP
 
-[![CI](https://github.com/euisuh/npm-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/euisuh/npm-mcp/actions/workflows/ci.yml)
+[![CI](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 An MCP server for [Nginx Proxy Manager](https://nginxproxymanager.com/). It lets Claude and other MCP clients manage reverse-proxy hosts, Let's Encrypt certificates, and access lists through typed tools instead of clicking through the NPM admin UI.
@@ -39,11 +39,11 @@ This server runs either:
 
 ## Quick start: Docker sidecar
 
-The bundled `docker-compose.yml` starts both Nginx Proxy Manager and this MCP sidecar. If you already run NPM, copy only the `npm-mcp` service into your existing compose file.
+The bundled `docker-compose.yml` starts both Nginx Proxy Manager and this MCP sidecar. If you already run NPM, copy only the `nginx-proxy-manager-mcp` service into your existing compose file.
 
 ```bash
-git clone https://github.com/euisuh/npm-mcp.git
-cd npm-mcp
+git clone https://github.com/euisuh/nginx-proxy-manager-mcp.git
+cd nginx-proxy-manager-mcp
 cp .env.example .env
 # edit .env — NPM_EMAIL / NPM_PASSWORD must be an existing NPM admin account
 docker compose up -d
@@ -90,8 +90,8 @@ Example client config:
 {
   "mcpServers": {
     "nginx-proxy-manager": {
-      "command": "/path/to/npm-mcp/.venv/bin/python",
-      "args": ["/path/to/npm-mcp/mcp/server.py"],
+      "command": "/path/to/nginx-proxy-manager-mcp/.venv/bin/python",
+      "args": ["/path/to/nginx-proxy-manager-mcp/mcp/server.py"],
       "env": {
         "NPM_URL": "http://localhost:81",
         "NPM_EMAIL": "admin@example.com",
@@ -180,10 +180,6 @@ Issues and pull requests are welcome. Adding a new NPM resource follows a fixed 
 4. Run `pytest -q`.
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org/).
-
-## Naming note
-
-The repository is currently named `npm-mcp`, but the clearer public name is `nginx-proxy-manager-mcp`. “NPM” is accurate inside the Nginx Proxy Manager community, but ambiguous to most developers because it also means Node Package Manager.
 
 ## Author
 

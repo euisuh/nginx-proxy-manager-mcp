@@ -20,6 +20,7 @@ services:
       MCP_TRANSPORT: sse
       MCP_HOST: 0.0.0.0
       MCP_PORT: 8000
+      MCP_BEARER_TOKEN: ${MCP_BEARER_TOKEN:-}
     depends_on:
       - app
     ports:

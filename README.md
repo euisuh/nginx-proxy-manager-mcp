@@ -39,7 +39,7 @@ This server runs either:
 
 ## Quick start: Docker sidecar
 
-The bundled `docker-compose.yml` starts both Nginx Proxy Manager and this MCP sidecar. If you already run NPM, copy only the `nginx-proxy-manager-mcp` service into your existing compose file.
+The bundled `docker-compose.yml` starts both Nginx Proxy Manager and this MCP sidecar from source. If you already run NPM, copy only the `nginx-proxy-manager-mcp` service into your existing compose file.
 
 ```bash
 git clone https://github.com/euisuh/nginx-proxy-manager-mcp.git
@@ -50,6 +50,24 @@ docker compose up -d
 ```
 
 `NPM_URL` defaults to `http://app:81`, the NPM admin API on the internal Docker network. Leave it as-is when both services share a compose stack; point it at your NPM host otherwise.
+
+To use the published GHCR image instead of building locally:
+
+```yaml
+services:
+  nginx-proxy-manager-mcp:
+    image: ghcr.io/euisuh/nginx-proxy-manager-mcp:latest
+    restart: unless-stopped
+    environment:
+      NPM_URL: http://app:81
+      NPM_EMAIL: ${NPM_EMAIL}
+      NPM_PASSWORD: ${NPM_PASSWORD}
+      MCP_TRANSPORT: sse
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 8000
+    ports:
+      - "127.0.0.1:8000:8000"
+```
 
 Register the SSE server with Claude Code:
 
@@ -145,6 +163,16 @@ pytest -q
 ```
 
 Tests mock the NPM API with [respx](https://lundberg.github.io/respx/), so the suite runs offline and touches no real infrastructure. CI runs the same command on every push and pull request.
+
+## Releases
+
+Tagged releases publish multi-architecture Docker images to GitHub Container Registry:
+
+- `ghcr.io/euisuh/nginx-proxy-manager-mcp:<version>` for tags such as `v0.2.0`
+- `ghcr.io/euisuh/nginx-proxy-manager-mcp:<major>.<minor>` for semver tags
+- `ghcr.io/euisuh/nginx-proxy-manager-mcp:latest` for the newest tagged release
+
+The Docker workflow also builds pull requests without pushing an image, so packaging changes are validated before release.
 
 ## Security
 

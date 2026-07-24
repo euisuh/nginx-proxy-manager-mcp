@@ -1,6 +1,18 @@
 import os
-import httpx
 from typing import Any
+
+import httpx
+
+
+class NPMAPIError(RuntimeError):
+    """Actionable, redacted error from the Nginx Proxy Manager API."""
+
+    def __init__(self, method: str, path: str, status_code: int, detail: str) -> None:
+        self.method = method.upper()
+        self.path = path
+        self.status_code = status_code
+        self.detail = detail
+        super().__init__(f"NPM API {self.method} {self.path} failed: HTTP {status_code}: {detail}")
 
 
 class NPMClient:
@@ -11,17 +23,34 @@ class NPMClient:
         self.token: str | None = None
         self._http = httpx.Client(timeout=30)
 
+    def _raise_api_error(self, method: str, path: str, resp: httpx.Response) -> None:
+        detail = ""
+        if resp.content:
+            try:
+                body = resp.json()
+            except ValueError:
+                detail = resp.text.strip()
+            else:
+                if isinstance(body, dict):
+                    detail = str(
+                        body.get("message")
+                        or body.get("error")
+                        or body.get("detail")
+                        or body
+                    )
+                else:
+                    detail = str(body)
+        if not detail:
+            detail = resp.reason_phrase or "request failed"
+        raise NPMAPIError(method, path, resp.status_code, detail)
+
     def _authenticate(self) -> None:
-        try:
-            resp = self._http.post(
-                f"{self.base_url}/api/tokens",
-                json={"identity": self._email, "secret": self._password},
-            )
-            resp.raise_for_status()
-        except httpx.HTTPStatusError as exc:
-            raise RuntimeError(
-                f"NPM authentication failed: HTTP {exc.response.status_code}"
-            ) from None
+        resp = self._http.post(
+            f"{self.base_url}/api/tokens",
+            json={"identity": self._email, "secret": self._password},
+        )
+        if resp.is_error:
+            self._raise_api_error("POST", "/tokens", resp)
         self.token = resp.json()["token"]
 
     def _auth_headers(self) -> dict[str, str]:
@@ -44,7 +73,8 @@ class NPMClient:
                 headers=self._auth_headers(),
                 **kwargs,
             )
-        resp.raise_for_status()
+        if resp.is_error:
+            self._raise_api_error(method, path, resp)
         if not resp.content:
             return None
         return resp.json()

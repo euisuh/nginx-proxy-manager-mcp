@@ -136,7 +136,7 @@ Example client config:
 | `NPM_EMAIL` | yes | — | NPM admin account email |
 | `NPM_PASSWORD` | yes | — | NPM admin account password |
 | `MCP_TRANSPORT` | no | `sse` | MCP transport: `sse` or `stdio` |
-| `MCP_HOST` | no | `0.0.0.0` | Bind address for SSE mode |
+| `MCP_HOST` | no | `127.0.0.1` | Bind address for SSE mode; Docker Compose sets `0.0.0.0` inside the container while publishing only to localhost |
 | `MCP_PORT` | no | `8000` | Bind port for SSE mode |
 | `MCP_BEARER_TOKEN` | no | — | Optional bearer token required for SSE HTTP requests |
 
@@ -188,6 +188,7 @@ Anything that can reach this MCP server has admin-level control over your proxy 
 
 - Do not expose the MCP endpoint publicly.
 - Keep the Docker port bound to `127.0.0.1` unless you have another trusted network boundary.
+- Bare SSE runs bind to `127.0.0.1` by default; set `MCP_HOST=0.0.0.0` only behind a trusted network boundary.
 - Set `MCP_BEARER_TOKEN` for SSE deployments that can be reached by anything beyond the local machine, and configure clients to send `Authorization: Bearer <token>`.
 - Use environment variables or a secrets manager for NPM credentials; do not commit `.env`.
 - The NPM admin JWT lives in process memory and is never written to disk.

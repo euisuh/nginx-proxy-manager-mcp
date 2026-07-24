@@ -38,3 +38,15 @@ def test_get_transport_rejects_unknown_value(monkeypatch):
     with pytest.raises(SystemExit) as exc:
         get_transport()
     assert exc.value.code == 1
+
+
+def test_get_host_defaults_to_loopback(monkeypatch):
+    monkeypatch.delenv("MCP_HOST", raising=False)
+    from server import get_host
+    assert get_host() == "127.0.0.1"
+
+
+def test_get_host_uses_env_value(monkeypatch):
+    monkeypatch.setenv("MCP_HOST", "0.0.0.0")
+    from server import get_host
+    assert get_host() == "0.0.0.0"

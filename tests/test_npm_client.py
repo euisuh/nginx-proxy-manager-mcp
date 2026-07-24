@@ -1,7 +1,7 @@
 import pytest
 import respx
 import httpx
-from npm_client import NPMClient
+from npm_client import NPMAPIError, NPMClient
 
 
 @pytest.fixture(autouse=True)
@@ -49,16 +49,20 @@ def test_reauth_on_401():
 
 
 @respx.mock
-def test_get_raises_on_non_401_error():
+def test_get_raises_structured_error_on_non_401_error():
     respx.post("http://npm.test/api/tokens").mock(
         return_value=httpx.Response(200, json={"token": "tok"})
     )
     respx.get("http://npm.test/api/nginx/proxy-hosts").mock(
-        return_value=httpx.Response(500)
+        return_value=httpx.Response(500, json={"message": "database unavailable"})
     )
     client = NPMClient()
-    with pytest.raises(httpx.HTTPStatusError):
+    with pytest.raises(NPMAPIError) as exc:
         client.get("/nginx/proxy-hosts")
+    assert exc.value.method == "GET"
+    assert exc.value.path == "/nginx/proxy-hosts"
+    assert exc.value.status_code == 500
+    assert "database unavailable" in str(exc.value)
 
 
 @respx.mock
@@ -69,7 +73,7 @@ def test_missing_env_raises(monkeypatch):
 
 
 @respx.mock
-def test_second_401_raises():
+def test_second_401_raises_structured_error():
     """Second 401 after re-auth must raise, not loop."""
     respx.post("http://npm.test/api/tokens").mock(
         return_value=httpx.Response(200, json={"token": "new-tok"})
@@ -79,8 +83,9 @@ def test_second_401_raises():
     )
     client = NPMClient()
     client.token = "expired"
-    with pytest.raises(httpx.HTTPStatusError):
+    with pytest.raises(NPMAPIError) as exc:
         client.get("/nginx/proxy-hosts")
+    assert exc.value.status_code == 401
 
 
 @respx.mock
@@ -88,3 +93,32 @@ def test_missing_email_env_raises(monkeypatch):
     monkeypatch.delenv("NPM_EMAIL")
     with pytest.raises(KeyError):
         NPMClient()
+
+
+@respx.mock
+def test_authentication_error_is_structured_and_redacted():
+    respx.post("http://npm.test/api/tokens").mock(
+        return_value=httpx.Response(401, json={"error": "bad credentials"})
+    )
+    client = NPMClient()
+    with pytest.raises(NPMAPIError) as exc:
+        client.get("/nginx/proxy-hosts")
+    assert exc.value.method == "POST"
+    assert exc.value.path == "/tokens"
+    assert exc.value.status_code == 401
+    assert "bad credentials" in str(exc.value)
+    assert "testpass" not in str(exc.value)
+
+
+@respx.mock
+def test_error_with_non_json_body_uses_response_text():
+    respx.post("http://npm.test/api/tokens").mock(
+        return_value=httpx.Response(200, json={"token": "tok"})
+    )
+    respx.get("http://npm.test/api/nginx/proxy-hosts").mock(
+        return_value=httpx.Response(502, text="bad gateway")
+    )
+    client = NPMClient()
+    with pytest.raises(NPMAPIError) as exc:
+        client.get("/nginx/proxy-hosts")
+    assert "bad gateway" in str(exc.value)

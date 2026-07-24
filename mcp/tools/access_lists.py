@@ -5,6 +5,8 @@ if TYPE_CHECKING:
     from fastmcp import FastMCP
     from npm_client import NPMClient
 
+from tools.previews import dry_run_preview
+
 
 class AccessListTools:
     def __init__(self, client: NPMClient) -> None:
@@ -25,6 +27,7 @@ class AccessListTools:
         pass_auth: bool = False,
         clients: Optional[list[dict]] = None,
         items: Optional[list[dict]] = None,
+        dry_run: bool = False,
     ) -> dict:
         """
         Create a new access list.
@@ -38,6 +41,8 @@ class AccessListTools:
             "clients": clients or [],
             "items": items or [],
         }
+        if dry_run:
+            return dry_run_preview("POST", "/nginx/access-lists", payload)
         return self.client.post("/nginx/access-lists", json=payload)
 
     def update_access_list(
@@ -48,8 +53,9 @@ class AccessListTools:
         pass_auth: Optional[bool] = None,
         clients: Optional[list[dict]] = None,
         items: Optional[list[dict]] = None,
+        dry_run: bool = False,
     ) -> dict:
-        """Update an existing access list. Only provided fields are changed."""
+        """Update an access list. Set dry_run=True to preview the merged payload."""
         existing = self.client.get(f"/nginx/access-lists/{id}")
         updates = {
             k: v
@@ -63,10 +69,14 @@ class AccessListTools:
             if v is not None
         }
         existing.update(updates)
+        if dry_run:
+            return dry_run_preview("PUT", f"/nginx/access-lists/{id}", existing)
         return self.client.put(f"/nginx/access-lists/{id}", json=existing)
 
-    def delete_access_list(self, id: int) -> bool:
-        """Delete an access list. Proxy hosts using it will lose access control."""
+    def delete_access_list(self, id: int, dry_run: bool = False) -> bool | dict:
+        """Delete an access list. Set dry_run=True to preview only."""
+        if dry_run:
+            return dry_run_preview("DELETE", f"/nginx/access-lists/{id}")
         return self.client.delete(f"/nginx/access-lists/{id}")
 
 

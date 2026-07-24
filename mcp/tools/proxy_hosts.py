@@ -54,6 +54,92 @@ class ProxyHostTools:
             return dry_run_preview("POST", "/nginx/proxy-hosts", payload)
         return self.client.post("/nginx/proxy-hosts", json=payload)
 
+    def create_proxy_host_with_letsencrypt(
+        self,
+        domain_names: list[str],
+        forward_scheme: str,
+        forward_host: str,
+        forward_port: int,
+        email: str,
+        access_list_id: Optional[int] = None,
+        block_exploits: bool = True,
+        caching_enabled: bool = False,
+        allow_websocket_upgrade: bool = False,
+        dry_run: bool = False,
+    ) -> dict:
+        """Create a Let's Encrypt certificate, then create an HTTPS-forced proxy host."""
+        cert_payload = {
+            "provider": "letsencrypt",
+            "domain_names": domain_names,
+            "meta": {
+                "letsencrypt_email": email,
+                "letsencrypt_agree": True,
+                "dns_challenge": False,
+            },
+        }
+        proxy_payload = {
+            "domain_names": domain_names,
+            "forward_scheme": forward_scheme,
+            "forward_host": forward_host,
+            "forward_port": forward_port,
+            "ssl_forced": True,
+            "certificate_id": "<created certificate id>",
+            "access_list_id": access_list_id or 0,
+            "block_exploits": block_exploits,
+            "caching_enabled": caching_enabled,
+            "allow_websocket_upgrade": allow_websocket_upgrade,
+            "advanced_config": "",
+            "meta": {},
+            "locations": [],
+        }
+        if dry_run:
+            return {
+                "dry_run": True,
+                "steps": [
+                    dry_run_preview("POST", "/nginx/certificates", cert_payload),
+                    dry_run_preview("POST", "/nginx/proxy-hosts", proxy_payload),
+                ],
+            }
+
+        try:
+            certificate = self.client.post("/nginx/certificates", json=cert_payload)
+        except Exception as exc:
+            return {
+                "ok": False,
+                "failed_step": "create_certificate",
+                "error": str(exc),
+                "created_certificate": None,
+                "created_proxy_host": None,
+            }
+
+        certificate_id = certificate.get("id") if isinstance(certificate, dict) else None
+        if not certificate_id:
+            return {
+                "ok": False,
+                "failed_step": "create_certificate",
+                "error": "NPM did not return a certificate id",
+                "created_certificate": certificate,
+                "created_proxy_host": None,
+            }
+
+        proxy_payload["certificate_id"] = certificate_id
+        try:
+            proxy_host = self.client.post("/nginx/proxy-hosts", json=proxy_payload)
+        except Exception as exc:
+            return {
+                "ok": False,
+                "failed_step": "create_proxy_host",
+                "error": str(exc),
+                "created_certificate": certificate,
+                "created_proxy_host": None,
+            }
+
+        return {
+            "ok": True,
+            "certificate": certificate,
+            "proxy_host": proxy_host,
+        }
+
     def update_proxy_host(
         self,
         id: int,
@@ -116,6 +202,7 @@ def register_proxy_host_tools(mcp: FastMCP, client: NPMClient) -> None:
     mcp.tool()(tools.list_proxy_hosts)
     mcp.tool()(tools.get_proxy_host)
     mcp.tool()(tools.create_proxy_host)
+    mcp.tool()(tools.create_proxy_host_with_letsencrypt)
     mcp.tool()(tools.update_proxy_host)
     mcp.tool()(tools.delete_proxy_host)
     mcp.tool()(tools.enable_proxy_host)

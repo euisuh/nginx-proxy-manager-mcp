@@ -23,7 +23,7 @@ This server runs either:
 
 ## Features
 
-- 15 MCP tools for common NPM operations.
+- 16 MCP tools for common NPM operations.
 - `dry_run` previews for mutating tools, so an MCP client can show the exact NPM request before applying it.
 - JWT auth against the NPM API with in-memory token caching and automatic re-authentication on `401`.
 - Docker sidecar deployment that binds the MCP port to localhost by default.
@@ -34,6 +34,7 @@ This server runs either:
 
 | Category | Tools |
 |---|---|
+| Workflows | `create_proxy_host_with_letsencrypt` |
 | Proxy hosts | `list_proxy_hosts`, `get_proxy_host`, `create_proxy_host`, `update_proxy_host`, `delete_proxy_host`, `enable_proxy_host`, `disable_proxy_host` |
 | SSL certs | `list_certificates`, `create_letsencrypt_cert`, `renew_certificate` |
 | Access lists | `list_access_lists`, `get_access_list`, `create_access_list`, `update_access_list`, `delete_access_list` |

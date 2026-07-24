@@ -9,6 +9,22 @@ from starlette.types import Receive, Scope, Send
 ASGIApp = Callable[[Scope, Receive, Send], Awaitable[None]]
 
 
+class HealthCheckMiddleware:
+    """Serve an unauthenticated liveness endpoint for SSE deployments."""
+
+    def __init__(self, app: ASGIApp, path: str = "/healthz") -> None:
+        self.app = app
+        self.path = path
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] == "http" and scope.get("path") == self.path:
+            response = JSONResponse({"ok": True, "service": "nginx-proxy-manager-mcp"})
+            await response(scope, receive, send)
+            return
+
+        await self.app(scope, receive, send)
+
+
 class BearerTokenAuthMiddleware:
     """Require a static bearer token for HTTP/SSE MCP transports."""
 

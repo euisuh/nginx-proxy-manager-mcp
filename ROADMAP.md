@@ -14,6 +14,7 @@ This project is intentionally small: one MCP server that gives AI assistants saf
 - Python package build validation on release tags.
 - Smithery and Glama registry metadata files.
 - Optional bearer-token guard for SSE deployments.
+- Unauthenticated `/healthz` liveness endpoint for SSE sidecars.
 - Safer loopback default for bare SSE runs.
 - Lightweight CI quality gate with Ruff.
 
@@ -32,7 +33,7 @@ This project is intentionally small: one MCP server that gives AI assistants saf
 
 - Optional allowlist for destructive tools.
 - Structured logs with request IDs and redacted credentials.
-- Health/readiness endpoint for the SSE sidecar.
+- Readiness endpoint that verifies NPM API reachability without leaking credentials.
 - Integration test profile against an ephemeral NPM container.
 
 ## Positioning

@@ -4,7 +4,7 @@ import sys
 from fastmcp import FastMCP
 from starlette.middleware import Middleware
 
-from nginx_proxy_manager_mcp.auth import BearerTokenAuthMiddleware
+from nginx_proxy_manager_mcp.auth import BearerTokenAuthMiddleware, HealthCheckMiddleware
 from nginx_proxy_manager_mcp.npm_client import NPMClient
 from nginx_proxy_manager_mcp.tools.access_lists import register_access_list_tools
 from nginx_proxy_manager_mcp.tools.proxy_hosts import register_proxy_host_tools
@@ -33,9 +33,11 @@ def get_transport() -> str:
 
 def get_sse_middleware() -> list[Middleware]:
     token = os.environ.get("MCP_BEARER_TOKEN")
+    middleware = [Middleware(HealthCheckMiddleware)]
     if not token:
-        return []
-    return [Middleware(BearerTokenAuthMiddleware, token=token)]
+        return middleware
+    middleware.append(Middleware(BearerTokenAuthMiddleware, token=token))
+    return middleware
 
 
 def get_host() -> str:

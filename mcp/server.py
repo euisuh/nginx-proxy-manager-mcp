@@ -44,7 +44,7 @@ def get_transport() -> str:
     return transport
 
 
-mcp = FastMCP("npm-mcp")
+mcp = FastMCP("nginx-proxy-manager-mcp")
 
 
 def build_server() -> FastMCP:

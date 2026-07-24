@@ -32,6 +32,6 @@ This project is intentionally small: one MCP server that gives AI assistants saf
 - Health/readiness endpoint for the SSE sidecar.
 - Integration test profile against an ephemeral NPM container.
 
-## Naming / positioning
+## Positioning
 
-`npm-mcp` is short but ambiguous because most developers read “npm” as Node Package Manager. The clearest public-facing name is likely `nginx-proxy-manager-mcp`: it is longer, but it matches the exact product and search terms people will use.
+The public name is `nginx-proxy-manager-mcp` so the repository matches the exact product and search terms people use. Keep README, container image names, MCP directory submissions, and release assets aligned with that name.

@@ -28,6 +28,7 @@ This server runs either:
 - JWT auth against the NPM API with in-memory token caching and automatic re-authentication on `401`.
 - Docker sidecar deployment that binds the MCP port to localhost by default.
 - Offline pytest suite with mocked NPM API responses.
+- Ruff quality gate and contributor templates for public maintenance.
 - No token persistence and no hardcoded credentials.
 
 ## Tools
@@ -93,6 +94,8 @@ Or add it manually to an MCP client config:
   }
 }
 ```
+
+More examples live in [`examples/`](examples/): Claude Desktop, Claude Code, Cursor, and Windsurf.
 
 ## Quick start: stdio
 
@@ -189,7 +192,7 @@ Anything that can reach this MCP server has admin-level control over your proxy 
 - Do not expose the MCP endpoint publicly.
 - Keep the Docker port bound to `127.0.0.1` unless you have another trusted network boundary.
 - Bare SSE runs bind to `127.0.0.1` by default; set `MCP_HOST=0.0.0.0` only behind a trusted network boundary.
-- Set `MCP_BEARER_TOKEN` for SSE deployments that can be reached by anything beyond the local machine, and configure clients to send `Authorization: Bearer <token>`.
+- Set `MCP_BEARER_TOKEN` for SSE deployments that can be reached by anything beyond the local machine, and configure clients to send `Authorization: Bearer YOUR_TOKEN`.
 - Use environment variables or a secrets manager for NPM credentials; do not commit `.env`.
 - The NPM admin JWT lives in process memory and is never written to disk.
 - The container runs as a non-root user.
@@ -198,7 +201,7 @@ See [SECURITY.md](SECURITY.md) for reporting and deployment guidance.
 
 ## Roadmap
 
-See [ROADMAP.md](ROADMAP.md). Near-term priorities are safer mutating tools, a one-shot “create host with certificate” workflow, broader NPM resource coverage, and packaged container releases.
+See [ROADMAP.md](ROADMAP.md). Near-term priorities are clean Python packaging, MCP directory metadata, broader NPM resource coverage, and integration tests.
 
 ## Limitations
 
@@ -210,12 +213,12 @@ See [ROADMAP.md](ROADMAP.md). Near-term priorities are safer mutating tools, a o
 
 ## Contributing
 
-Issues and pull requests are welcome. Adding a new NPM resource follows a fixed shape:
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md). Adding a new NPM resource follows a fixed shape:
 
 1. Create `mcp/tools/<resource>.py` with a `register_<resource>_tools(mcp, client)` function.
 2. Register it in `build_server()` in `mcp/server.py`.
 3. Add `tests/test_<resource>.py` covering each tool with respx-mocked NPM responses.
-4. Run `pytest -q`.
+4. Run `ruff check .` and `pytest -q`.
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org/).
 

@@ -21,7 +21,9 @@ if "mcp" not in sys.modules or not hasattr(sys.modules.get("mcp"), "McpError"):
     sys.path = _saved_path
 
 from fastmcp import FastMCP
+from starlette.middleware import Middleware
 
+from auth import BearerTokenAuthMiddleware
 from npm_client import NPMClient
 from tools.proxy_hosts import register_proxy_host_tools
 from tools.ssl_certs import register_ssl_cert_tools
@@ -44,6 +46,13 @@ def get_transport() -> str:
     return transport
 
 
+def get_sse_middleware() -> list[Middleware]:
+    token = os.environ.get("MCP_BEARER_TOKEN")
+    if not token:
+        return []
+    return [Middleware(BearerTokenAuthMiddleware, token=token)]
+
+
 mcp = FastMCP("nginx-proxy-manager-mcp")
 
 
@@ -64,4 +73,4 @@ if __name__ == "__main__":
     else:
         host = os.environ.get("MCP_HOST", "0.0.0.0")
         port = int(os.environ.get("MCP_PORT", "8000"))
-        mcp.run(transport="sse", host=host, port=port)
+        mcp.run(transport="sse", host=host, port=port, middleware=get_sse_middleware())

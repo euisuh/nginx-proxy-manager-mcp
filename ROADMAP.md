@@ -11,8 +11,6 @@ This project is intentionally small: one MCP server that gives AI assistants saf
 
 ## v0.3 — Broader NPM resource coverage
 
-- Redirection hosts: list/get/create/update/delete/enable/disable.
-- Streams: list/get/create/update/delete/enable/disable.
 - 404 hosts and dead hosts.
 - Custom certificates: upload/list/renew/delete where supported by the NPM API.
 - Users and audit-log read-only tools.

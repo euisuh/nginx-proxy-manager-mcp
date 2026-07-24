@@ -3,10 +3,10 @@ from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from fastmcp import FastMCP
-    from npm_client import NPMClient
+    from nginx_proxy_manager_mcp.npm_client import NPMClient
 
-from tools.previews import dry_run_preview
-from validation import (
+from nginx_proxy_manager_mcp.tools.previews import dry_run_preview
+from nginx_proxy_manager_mcp.validation import (
     validate_host,
     validate_port,
     validate_positive_id,

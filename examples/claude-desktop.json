@@ -2,7 +2,7 @@
   "mcpServers": {
     "nginx-proxy-manager": {
       "command": "/path/to/nginx-proxy-manager-mcp/.venv/bin/python",
-      "args": ["/path/to/nginx-proxy-manager-mcp/mcp/server.py"],
+      "args": ["-m", "nginx_proxy_manager_mcp.server"],
       "env": {
         "NPM_URL": "http://localhost:81",
         "NPM_EMAIL": "admin@example.com",

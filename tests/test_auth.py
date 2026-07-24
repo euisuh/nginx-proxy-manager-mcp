@@ -1,8 +1,8 @@
 import anyio
 from starlette.responses import JSONResponse
 
-from auth import BearerTokenAuthMiddleware
-from server import get_sse_middleware
+from nginx_proxy_manager_mcp.auth import BearerTokenAuthMiddleware
+from nginx_proxy_manager_mcp.server import get_sse_middleware
 
 
 async def ok_app(scope, receive, send):

@@ -7,7 +7,9 @@ on:
   pull_request:
     paths:
       - '.github/workflows/docker.yml'
-      - 'mcp/**'
+      - 'Dockerfile'
+      - 'nginx_proxy_manager_mcp/**'
+      - 'pyproject.toml'
       - 'docker-compose.yml'
   workflow_dispatch:
 
@@ -48,7 +50,7 @@ jobs:
       - name: Build image
         uses: docker/build-push-action@v6
         with:
-          context: ./mcp
+          context: .
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}

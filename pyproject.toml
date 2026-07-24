@@ -1,3 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nginx-proxy-manager-mcp"
+version = "0.5.0"
+description = "MCP server for Nginx Proxy Manager"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [{name = "Euisuh Jeong"}]
+keywords = ["mcp", "nginx-proxy-manager", "homelab", "reverse-proxy"]
+dependencies = [
+  "fastmcp>=2.0.0",
+  "httpx>=0.27.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/euisuh/nginx-proxy-manager-mcp"
+Repository = "https://github.com/euisuh/nginx-proxy-manager-mcp"
+Issues = "https://github.com/euisuh/nginx-proxy-manager-mcp/issues"
+
+[project.scripts]
+nginx-proxy-manager-mcp = "nginx_proxy_manager_mcp.server:main"
+
+[tool.setuptools.packages.find]
+include = ["nginx_proxy_manager_mcp", "nginx_proxy_manager_mcp.*"]
+
 [tool.ruff]
 target-version = "py312"
 line-length = 100

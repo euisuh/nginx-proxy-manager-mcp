@@ -104,12 +104,12 @@ Use stdio when you want the MCP client to launch the server process directly ins
 ```bash
 python -m venv .venv
 . .venv/bin/activate
-pip install -r mcp/requirements.txt
+pip install -e .
 NPM_URL=http://localhost:81 \
 NPM_EMAIL=admin@example.com \
 NPM_PASSWORD=... \
 MCP_TRANSPORT=stdio \
-python mcp/server.py
+nginx-proxy-manager-mcp
 ```
 
 Example client config:
@@ -119,7 +119,7 @@ Example client config:
   "mcpServers": {
     "nginx-proxy-manager": {
       "command": "/path/to/nginx-proxy-manager-mcp/.venv/bin/python",
-      "args": ["/path/to/nginx-proxy-manager-mcp/mcp/server.py"],
+      "args": ["-m", "nginx_proxy_manager_mcp.server"],
       "env": {
         "NPM_URL": "http://localhost:81",
         "NPM_EMAIL": "admin@example.com",
@@ -160,16 +160,16 @@ Missing required variables make the server exit with a clear error at startup ra
                                            └──────────────────────────┘
 ```
 
-- `mcp/server.py` validates required env vars, builds the FastMCP app, registers every tool module, and serves either SSE or stdio.
-- `mcp/npm_client.py` wraps `httpx`, exchanges the admin email/password for a JWT on first use, caches the token in memory, and re-authenticates on `401`.
-- `mcp/tools/` keeps one module per NPM resource. Adding a resource means adding one `register_*_tools(mcp, client)` function and one registration line.
+- `nginx_proxy_manager_mcp/server.py` validates required env vars, builds the FastMCP app, registers every tool module, and serves either SSE or stdio.
+- `nginx_proxy_manager_mcp/npm_client.py` wraps `httpx`, exchanges the admin email/password for a JWT on first use, caches the token in memory, and re-authenticates on `401`.
+- `nginx_proxy_manager_mcp/tools/` keeps one module per NPM resource. Adding a resource means adding one `register_*_tools(mcp, client)` function and one registration line.
 
 ## Development
 
 ```bash
 python -m venv .venv
 . .venv/bin/activate
-pip install -r mcp/requirements.txt -r mcp/requirements-dev.txt
+pip install -e . -r requirements-dev.txt
 pytest -q
 ```
 
@@ -215,8 +215,8 @@ See [ROADMAP.md](ROADMAP.md). Near-term priorities are clean Python packaging, M
 
 Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md). Adding a new NPM resource follows a fixed shape:
 
-1. Create `mcp/tools/<resource>.py` with a `register_<resource>_tools(mcp, client)` function.
-2. Register it in `build_server()` in `mcp/server.py`.
+1. Create `nginx_proxy_manager_mcp/tools/<resource>.py` with a `register_<resource>_tools(mcp, client)` function.
+2. Register it in `build_server()` in `nginx_proxy_manager_mcp/server.py`.
 3. Add `tests/test_<resource>.py` covering each tool with respx-mocked NPM responses.
 4. Run `ruff check .` and `pytest -q`.
 

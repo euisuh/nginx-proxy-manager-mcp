@@ -61,6 +61,63 @@ def test_create_proxy_host_dry_run_does_not_post(tools, client):
     client.post.assert_not_called()
 
 
+def test_create_proxy_host_with_letsencrypt_success(tools, client):
+    client.post.side_effect = [
+        {"id": 5, "provider": "letsencrypt"},
+        {"id": 10, "domain_names": ["new.example.com"]},
+    ]
+    result = tools.create_proxy_host_with_letsencrypt(
+        domain_names=["new.example.com"],
+        forward_scheme="http",
+        forward_host="192.168.1.10",
+        forward_port=3000,
+        email="admin@example.com",
+    )
+    assert result["ok"] is True
+    assert result["certificate"]["id"] == 5
+    assert result["proxy_host"]["id"] == 10
+    cert_call, proxy_call = client.post.call_args_list
+    assert cert_call.args == ("/nginx/certificates",)
+    assert cert_call.kwargs["json"]["meta"]["letsencrypt_email"] == "admin@example.com"
+    assert proxy_call.args == ("/nginx/proxy-hosts",)
+    assert proxy_call.kwargs["json"]["certificate_id"] == 5
+    assert proxy_call.kwargs["json"]["ssl_forced"] is True
+
+
+def test_create_proxy_host_with_letsencrypt_dry_run_does_not_post(tools, client):
+    result = tools.create_proxy_host_with_letsencrypt(
+        domain_names=["new.example.com"],
+        forward_scheme="http",
+        forward_host="192.168.1.10",
+        forward_port=3000,
+        email="admin@example.com",
+        dry_run=True,
+    )
+    assert result["dry_run"] is True
+    assert result["steps"][0]["path"] == "/nginx/certificates"
+    assert result["steps"][1]["path"] == "/nginx/proxy-hosts"
+    assert result["steps"][1]["json"]["ssl_forced"] is True
+    client.post.assert_not_called()
+
+
+def test_create_proxy_host_with_letsencrypt_returns_created_cert_on_proxy_failure(tools, client):
+    client.post.side_effect = [
+        {"id": 5, "provider": "letsencrypt"},
+        RuntimeError("proxy failed"),
+    ]
+    result = tools.create_proxy_host_with_letsencrypt(
+        domain_names=["new.example.com"],
+        forward_scheme="http",
+        forward_host="192.168.1.10",
+        forward_port=3000,
+        email="admin@example.com",
+    )
+    assert result["ok"] is False
+    assert result["failed_step"] == "create_proxy_host"
+    assert result["created_certificate"]["id"] == 5
+    assert result["created_proxy_host"] is None
+
+
 def test_update_proxy_host_merges_fields(tools, client):
     client.get.return_value = {
         "id": 1,

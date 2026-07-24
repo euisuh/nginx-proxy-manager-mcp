@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest a tool, workflow, integration, or docs improvement
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What Nginx Proxy Manager or MCP workflow is hard today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the tool/API/docs change you want.
+    validations:
+      required: true
+  - type: textarea
+    id: npm-api
+    attributes:
+      label: Relevant NPM API shape
+      description: Link docs or paste redacted request/response examples if available.
+      render: json
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety checklist
+      options:
+        - label: Mutating tools should support `dry_run` previews.
+        - label: User input should be validated before calling NPM.
+        - label: Secrets must not appear in logs, examples, or tests.

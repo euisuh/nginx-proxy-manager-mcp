@@ -1,0 +1,56 @@
+name: Bug report
+description: Report a reproducible problem with the MCP server
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please do not include real credentials, bearer tokens, or `.env` contents.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Release tag, container tag, or commit SHA.
+      placeholder: v0.4.0
+    validations:
+      required: true
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Transport
+      options:
+        - SSE / Docker sidecar
+        - stdio
+        - other / unsure
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Minimal commands/tool calls/config shape needed to reproduce.
+      placeholder: |
+        1. Configure ...
+        2. Call tool ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or error output
+      description: Redact secrets before pasting.
+      render: text

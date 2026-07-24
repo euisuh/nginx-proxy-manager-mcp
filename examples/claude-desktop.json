@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "nginx-proxy-manager": {
+      "command": "/path/to/nginx-proxy-manager-mcp/.venv/bin/python",
+      "args": ["/path/to/nginx-proxy-manager-mcp/mcp/server.py"],
+      "env": {
+        "NPM_URL": "http://localhost:81",
+        "NPM_EMAIL": "admin@example.com",
+        "NPM_PASSWORD": "replace-me",
+        "MCP_TRANSPORT": "stdio"
+      }
+    }
+  }
+}

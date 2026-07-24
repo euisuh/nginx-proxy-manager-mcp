@@ -4,7 +4,7 @@ This MCP server can administer Nginx Proxy Manager. Treat it like an admin conso
 
 ## Supported versions
 
-Only the current `master` branch is supported until tagged releases begin.
+The latest tagged release and the current `master` branch receive security fixes. Older releases are best-effort only.
 
 ## Reporting a vulnerability
 

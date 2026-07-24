@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "nginx-proxy-manager": {
+      "serverUrl": "http://localhost:8000/sse"
+    }
+  }
+}

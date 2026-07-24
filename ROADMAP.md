@@ -11,15 +11,16 @@ This project is intentionally small: one MCP server that gives AI assistants saf
 - Proxy host, redirection host, stream, certificate, and access-list tools.
 - Versioned multi-arch GHCR container images.
 - Clean internal `nginx_proxy_manager_mcp` Python package layout.
+- Python package build validation on release tags.
+- Smithery and Glama registry metadata files.
 - Optional bearer-token guard for SSE deployments.
 - Safer loopback default for bare SSE runs.
 - Lightweight CI quality gate with Ruff.
 
 ## Next: distribution and MCP directory readiness
 
-- Add a minimal `pipx`/`uvx`/stdio installation path for users who do not want Docker.
-- Add Smithery/Glama-compatible metadata if the project is accepted by those MCP directories.
-- Add example Claude Desktop, Claude Code, Cursor, and Windsurf configuration snippets.
+- Publish the built wheel to PyPI once trusted publishing is configured.
+- Submit the repository to Smithery, Glama, PulseMCP, and MCP.so.
 
 ## Next: broader NPM coverage
 

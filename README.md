@@ -30,7 +30,7 @@ This server runs either:
 ## Features
 
 - 30 MCP tools for common NPM operations.
-- `dry_run` on all mutating tools to preview NPM requests before applying them; `update_proxy_host` has [known issue #19](https://github.com/euisuh/nginx-proxy-manager-mcp/issues/19) and should not be used until resolved.
+- `dry_run` on all mutating tools to preview NPM requests before applying them;
 - One-shot `create_proxy_host_with_letsencrypt` requests a certificate, then creates an HTTPS-forced proxy host.
 - JWT auth against the NPM API with in-memory token caching and automatic re-authentication on `401`.
 - Docker sidecar deployment that binds the MCP port to localhost by default.
@@ -50,7 +50,7 @@ This server runs either:
 | SSL certs | `list_certificates`, `create_letsencrypt_cert`, `renew_certificate` |
 | Access lists | `list_access_lists`, `get_access_list`, `create_access_list`, `update_access_list`, `delete_access_list` |
 
-All mutating tools expose `dry_run=True`. Previews contain `method` and `path`, plus `json` when the request has a body; the HTTPS workflow returns two previews in `steps`. The flag suppresses mutating requests, though some previews read current state. `update_proxy_host` remains affected by [known issue #19](https://github.com/euisuh/nginx-proxy-manager-mcp/issues/19); its presence in the catalog is not a claim that it works.
+All mutating tools expose `dry_run=True`. Previews contain `method` and `path`, plus `json` when the request has a body; the HTTPS workflow returns two previews in `steps`. The flag suppresses mutating requests, though some previews read current state. Update tools send only the fields in NPM's PUT schema (fixes [#19](https://github.com/euisuh/nginx-proxy-manager-mcp/issues/19)); this is covered by mocked tests and not yet checked against a live NPM instance.
 
 ## Compared to other NPM MCP servers
 
@@ -58,12 +58,12 @@ Competitor facts below come only from their linked READMEs fetched with `gh api 
 
 | Repository | Tool count documented | Dry-run support | Transport | Auth guard |
 |---|---:|---|---|---|
-| [euisuh (this server)](https://github.com/euisuh/nginx-proxy-manager-mcp) | 30 | `dry_run` on all mutating tools; `update_proxy_host`: known issue #19 | stdio, SSE | Optional SSE bearer token (`MCP_BEARER_TOKEN`); `/healthz` exempt |
+| [euisuh (this server)](https://github.com/euisuh/nginx-proxy-manager-mcp) | 30 | `dry_run` on all mutating tools | stdio, SSE | Optional SSE bearer token (`MCP_BEARER_TOKEN`); `/healthz` exempt |
 | [b3nw](https://github.com/b3nw/nginx-proxy-manager-mcp/blob/725d323b96c5d4e88790b8c88ea790a1133fc2d1/README.md) | 14 named tools (13 catalog rows plus `list_instances`) | not documented | stdio, HTTP | HTTP bearer token (`NPM_MCP_AUTH_TOKEN`) |
 | [omichelbraga](https://github.com/omichelbraga/nginx-proxy-manager-mcp/blob/c6568f0f090c8a087ac9f3a56ac468c139e0a3cb/README.md) | 66 | DELETE without `confirm: true` previews affected resources; general `dry_run` not documented | stdio, Streamable HTTP | Optional bearer token (`NPM_MCP_BEARER_TOKEN`); unset means no inbound auth |
 | [drmogie](https://github.com/drmogie/nginx-proxy-manager-mcp/blob/91c4176b544de6b64b9d16ff6dc891a352951145/README.md) | 4 named tools (`npm_status`, `npm_hosts`, `npm_audit_log`, `npm_call`) | Changes show what will be sent and require `confirm`; `dry_run` not documented | not documented | not documented |
 
-This server's implementations expose `dry_run` on every mutating tool, provide the one-shot `create_proxy_host_with_letsencrypt` workflow, and publish the Docker sidecar at `127.0.0.1:8000:8000`. These are verified in [`tools/`](nginx_proxy_manager_mcp/tools/), [`server.py`](nginx_proxy_manager_mcp/server.py), and [`docker-compose.yml`](docker-compose.yml). They do not establish that other servers lack equivalent capabilities. Preview support does not resolve known issue #19.
+This server's implementations expose `dry_run` on every mutating tool, provide the one-shot `create_proxy_host_with_letsencrypt` workflow, and publish the Docker sidecar at `127.0.0.1:8000:8000`. These are verified in [`tools/`](nginx_proxy_manager_mcp/tools/), [`server.py`](nginx_proxy_manager_mcp/server.py), and [`docker-compose.yml`](docker-compose.yml). They do not establish that other servers lack equivalent capabilities.
 
 ## Quick start: Docker sidecar
 

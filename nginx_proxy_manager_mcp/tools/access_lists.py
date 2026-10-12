@@ -5,6 +5,7 @@ if TYPE_CHECKING:
     from fastmcp import FastMCP
     from nginx_proxy_manager_mcp.npm_client import NPMClient
 
+from nginx_proxy_manager_mcp.tools.payloads import update_payload
 from nginx_proxy_manager_mcp.tools.previews import dry_run_preview
 from nginx_proxy_manager_mcp.validation import validate_access_clients, validate_access_items, validate_positive_id
 
@@ -77,7 +78,7 @@ class AccessListTools:
             }.items()
             if v is not None
         }
-        existing.update(updates)
+        existing = update_payload("access-lists", existing, updates)
         if dry_run:
             return dry_run_preview("PUT", f"/nginx/access-lists/{id}", existing)
         return self.client.put(f"/nginx/access-lists/{id}", json=existing)

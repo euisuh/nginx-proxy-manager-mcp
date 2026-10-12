@@ -17,7 +17,6 @@ The MCP server must already be configured for the intended NPM instance.
   with `dry_run=False`. Changed arguments require a new preview and approval.
 - Use `create_proxy_host_with_letsencrypt` for new HTTPS hosts.
 - Never delete without explicit user confirmation naming the resource and ID.
-- `update_proxy_host` has known issue #19; do not use it until resolved.
 - Never request credentials in chat; use the server's configured credentials.
 - If the HTTPS workflow fails, report `failed_step` and any created certificate;
   do not retry blindly or delete the certificate without explicit confirmation.

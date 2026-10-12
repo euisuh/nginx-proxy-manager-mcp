@@ -5,6 +5,7 @@ if TYPE_CHECKING:
     from fastmcp import FastMCP
     from nginx_proxy_manager_mcp.npm_client import NPMClient
 
+from nginx_proxy_manager_mcp.tools.payloads import update_payload
 from nginx_proxy_manager_mcp.tools.previews import dry_run_preview
 from nginx_proxy_manager_mcp.validation import (
     validate_host,
@@ -85,7 +86,7 @@ class StreamTools:
             }.items()
             if v is not None
         }
-        existing.update(updates)
+        existing = update_payload("streams", existing, updates)
         if dry_run:
             return dry_run_preview("PUT", f"/nginx/streams/{id}", existing)
         return self.client.put(f"/nginx/streams/{id}", json=existing)

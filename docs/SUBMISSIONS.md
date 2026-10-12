@@ -4,7 +4,6 @@ Drafts only: nothing has been submitted and no directory PR has been opened.
 All launch commands use the Git repository, without assuming a PyPI release.
 Configure `NPM_URL`, `NPM_EMAIL`, and `NPM_PASSWORD` locally before launching;
 never paste credentials into a directory entry. Use `MCP_TRANSPORT=stdio`.
-`update_proxy_host` is affected by [known issue #19](https://github.com/euisuh/nginx-proxy-manager-mcp/issues/19).
 
 ## Official MCP registry
 

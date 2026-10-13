@@ -1,0 +1,23 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.euisuh/nginx-proxy-manager-mcp",
+  "description": "Manage Nginx Proxy Manager hosts, certificates, streams and access lists with dry-run previews.",
+  "repository": {"url": "https://github.com/euisuh/nginx-proxy-manager-mcp", "source": "github"},
+  "version": "0.5.1",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "nginx-proxy-manager-mcp-server",
+      "version": "0.5.1",
+      "runtimeHint": "uvx",
+      "transport": {"type": "stdio"},
+      "environmentVariables": [
+        {"name": "NPM_URL", "description": "Base URL of the Nginx Proxy Manager admin API", "isRequired": true, "default": "http://localhost:81"},
+        {"name": "NPM_EMAIL", "description": "Existing NPM admin email", "isRequired": true},
+        {"name": "NPM_PASSWORD", "description": "Existing NPM admin password", "isRequired": true, "isSecret": true},
+        {"name": "MCP_TRANSPORT", "description": "Must be stdio when launched by an MCP client", "default": "stdio"}
+      ]
+    }
+  ]
+}

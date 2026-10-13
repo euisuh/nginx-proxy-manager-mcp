@@ -1,5 +1,7 @@
 # Nginx Proxy Manager MCP
 
+<!-- mcp-name: io.github.euisuh/nginx-proxy-manager-mcp -->
+
 [![CI](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/ci.yml)
 [![Docker](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/docker.yml/badge.svg)](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/docker.yml)
 [![Python Package](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/python-package.yml/badge.svg)](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/python-package.yml)
@@ -120,7 +122,17 @@ More examples live in [`examples/`](examples/): Claude Desktop, Claude Code, Cur
 
 ## Quick start: uvx / pipx
 
-If you do not want Docker, run the packaged stdio entry point from a local checkout:
+If you do not want Docker, run it from PyPI (package `nginx-proxy-manager-mcp-server`):
+
+```bash
+NPM_URL=http://localhost:81 \
+NPM_EMAIL=admin@example.com \
+NPM_PASSWORD=... \
+MCP_TRANSPORT=stdio \
+uvx nginx-proxy-manager-mcp-server
+```
+
+Or from a local checkout:
 
 ```bash
 git clone https://github.com/euisuh/nginx-proxy-manager-mcp.git
@@ -136,7 +148,7 @@ uvx --from . nginx-proxy-manager-mcp
 Or install it into an isolated environment:
 
 ```bash
-pipx install .
+pipx install nginx-proxy-manager-mcp-server
 ```
 
 ## Quick start: stdio
@@ -221,7 +233,7 @@ Tests mock the NPM API with [respx](https://lundberg.github.io/respx/), so the s
 
 ## Releases
 
-Tagged releases publish multi-architecture Docker images to GitHub Container Registry:
+Tagged releases (`vX.Y.Z`) publish the `nginx-proxy-manager-mcp-server` package to PyPI via trusted publishing (`.github/workflows/publish.yml`) and multi-architecture Docker images to GitHub Container Registry:
 
 - `ghcr.io/euisuh/nginx-proxy-manager-mcp:<version>` for tags such as `v0.2.0`
 - `ghcr.io/euisuh/nginx-proxy-manager-mcp:<major>.<minor>` for semver tags

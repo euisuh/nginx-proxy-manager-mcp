@@ -1,7 +1,7 @@
 # Directory submission drafts
 
-Drafts only: nothing has been submitted and no directory PR has been opened.
-All launch commands use the Git repository, without assuming a PyPI release.
+Status: awesome-mcp-servers PR #16295 is open. The other entries are drafts.
+The package is on PyPI as `nginx-proxy-manager-mcp-server`.
 Configure `NPM_URL`, `NPM_EMAIL`, and `NPM_PASSWORD` locally before launching;
 never paste credentials into a directory entry. Use `MCP_TRANSPORT=stdio`.
 
@@ -12,15 +12,11 @@ Destination: [Official MCP Registry](https://registry.modelcontextprotocol.io/).
 ```text
 Name: io.github.euisuh/nginx-proxy-manager-mcp
 Description: Manage Nginx Proxy Manager routing, certificates, streams, and access lists with mutation previews and a one-shot HTTPS host workflow.
-Install/launch: MCP_TRANSPORT=stdio uvx --from git+https://github.com/euisuh/nginx-proxy-manager-mcp.git nginx-proxy-manager-mcp
+Install/launch: MCP_TRANSPORT=stdio uvx nginx-proxy-manager-mcp-server
 Repository: https://github.com/euisuh/nginx-proxy-manager-mcp
 ```
 
-This is entry copy, not a publishable `server.json`. The official registry
-requires namespace authentication and package ownership verification; a Git
-launch command alone does not satisfy its package requirements. Prepare a
-supported published package and registry metadata before submission, following
-the [official requirements](https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/official-registry-requirements.md).
+Publish with `mcp-publisher login github && mcp-publisher publish` from the repo root, using [`server.json`](../server.json). Ownership is verified through the `mcp-name` marker in the PyPI README. Bump `version` in `server.json` and `pyproject.toml` together on each release.
 
 ## awesome-mcp-servers
 
@@ -33,7 +29,7 @@ Ready-to-paste list entry:
 ```
 
 ```text
-Install/launch: MCP_TRANSPORT=stdio uvx --from git+https://github.com/euisuh/nginx-proxy-manager-mcp.git nginx-proxy-manager-mcp
+Install/launch: MCP_TRANSPORT=stdio uvx nginx-proxy-manager-mcp-server
 Repository: https://github.com/euisuh/nginx-proxy-manager-mcp
 ```
 
@@ -44,7 +40,7 @@ Destination: [Agensi](https://www.agensi.io/), which also lists SKILL.md skills.
 ```text
 Name: Nginx Proxy Manager
 Description: Manage Nginx Proxy Manager routing, certificates, streams, and access lists with mutation previews and a one-shot HTTPS host workflow.
-Install/launch: MCP_TRANSPORT=stdio uvx --from git+https://github.com/euisuh/nginx-proxy-manager-mcp.git nginx-proxy-manager-mcp
+Install/launch: MCP_TRANSPORT=stdio uvx nginx-proxy-manager-mcp-server
 Repository: https://github.com/euisuh/nginx-proxy-manager-mcp
 Skill: https://github.com/euisuh/nginx-proxy-manager-mcp/blob/master/skills/nginx-proxy-manager/SKILL.md
 ```

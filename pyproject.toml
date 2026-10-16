@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nginx-proxy-manager-mcp-server"
-version = "0.5.1"
+version = "0.5.2"
 description = "MCP server for Nginx Proxy Manager: proxy hosts, certificates, streams and access lists with dry-run previews"
 readme = "README.md"
 requires-python = ">=3.12"

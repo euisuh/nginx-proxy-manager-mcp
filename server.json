@@ -3,13 +3,13 @@
   "name": "io.github.euisuh/nginx-proxy-manager-mcp",
   "description": "Manage Nginx Proxy Manager hosts, certificates, streams and access lists with dry-run previews.",
   "repository": {"url": "https://github.com/euisuh/nginx-proxy-manager-mcp", "source": "github"},
-  "version": "0.5.1",
+  "version": "0.5.2",
   "packages": [
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "nginx-proxy-manager-mcp-server",
-      "version": "0.5.1",
+      "version": "0.5.2",
       "runtimeHint": "uvx",
       "transport": {"type": "stdio"},
       "environmentVariables": [

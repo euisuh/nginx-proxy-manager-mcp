@@ -1,5 +1,7 @@
 from __future__ import annotations
-from typing import Optional, TYPE_CHECKING
+from typing import Annotated, Optional, TYPE_CHECKING
+
+from pydantic import Field
 
 if TYPE_CHECKING:
     from fastmcp import FastMCP
@@ -23,29 +25,29 @@ class ProxyHostTools:
         self.client = client
 
     def list_proxy_hosts(self) -> list[dict]:
-        """List all proxy hosts with their current status."""
+        """List proxy hosts configured in NPM, including their current status. Use this to find host IDs before get, update, enable, disable, or delete operations. It does not change NPM or request a certificate. Returns a list of host objects with IDs, domains, forwarding settings, and status."""
         return self.client.get("/nginx/proxy-hosts")
 
-    def get_proxy_host(self, id: int) -> dict:
-        """Get a single proxy host by ID."""
+    def get_proxy_host(self, id: Annotated[int, Field(description="ID of the proxy host, from the matching list tool.")]) -> dict:
+        """Fetch one proxy host by ID, including its configured fields and current status. Use this for details about one host; use list_proxy_hosts to find IDs or inspect all hosts. This is read-only and does not reload Nginx. Returns the NPM host object, including domains, forwarding settings, and status."""
         validate_positive_id(id)
         return self.client.get(f"/nginx/proxy-hosts/{id}")
 
     def create_proxy_host(
         self,
-        domain_names: list[str],
-        forward_scheme: str,
-        forward_host: str,
-        forward_port: int,
-        ssl_forced: bool = False,
-        certificate_id: Optional[int] = None,
-        access_list_id: Optional[int] = None,
-        block_exploits: bool = True,
-        caching_enabled: bool = False,
-        allow_websocket_upgrade: bool = False,
-        dry_run: bool = False,
+        domain_names: Annotated[list[str], Field(description="Domain names routed by this host or certificate.")],
+        forward_scheme: Annotated[str, Field(description="Upstream scheme: http or https.")],
+        forward_host: Annotated[str, Field(description="Upstream hostname or IP address.")],
+        forward_port: Annotated[int, Field(description="Upstream TCP port number.")],
+        ssl_forced: Annotated[bool, Field(description="Whether NPM redirects HTTP requests to HTTPS.")] = False,
+        certificate_id: Annotated[Optional[int], Field(description="NPM certificate ID to attach; omit for no certificate.")] = None,
+        access_list_id: Annotated[Optional[int], Field(description="NPM access-list ID to attach; omit for no access list.")] = None,
+        block_exploits: Annotated[bool, Field(description="Whether NPM enables its exploit-blocking option.")] = True,
+        caching_enabled: Annotated[bool, Field(description="Whether NPM enables proxy caching.")] = False,
+        allow_websocket_upgrade: Annotated[bool, Field(description="Whether NPM allows WebSocket upgrades.")] = False,
+        dry_run: Annotated[bool, Field(description="When True, return the exact request preview without changing NPM.")] = False,
     ) -> dict:
-        """Create a new proxy host. Set dry_run=True to preview without changing NPM."""
+        """Create a proxy host that routes the supplied domains to an HTTP or HTTPS upstream. Use this when configuring proxying without requesting a certificate; use create_proxy_host_with_letsencrypt to request one and force HTTPS. NPM stores the host configuration and applies it through its normal config handling. Returns the created host object with its ID, domains, and forwarding settings. Set dry_run=True to preview the exact request without changing NPM."""
         validate_domain_names(domain_names)
         validate_forward_scheme(forward_scheme)
         validate_host(forward_host, "forward_host")
@@ -73,18 +75,18 @@ class ProxyHostTools:
 
     def create_proxy_host_with_letsencrypt(
         self,
-        domain_names: list[str],
-        forward_scheme: str,
-        forward_host: str,
-        forward_port: int,
-        email: str,
-        access_list_id: Optional[int] = None,
-        block_exploits: bool = True,
-        caching_enabled: bool = False,
-        allow_websocket_upgrade: bool = False,
-        dry_run: bool = False,
+        domain_names: Annotated[list[str], Field(description="Domain names routed by this host or certificate.")],
+        forward_scheme: Annotated[str, Field(description="Upstream scheme: http or https.")],
+        forward_host: Annotated[str, Field(description="Upstream hostname or IP address.")],
+        forward_port: Annotated[int, Field(description="Upstream TCP port number.")],
+        email: Annotated[str, Field(description="Email address supplied to Let's Encrypt for certificate requests.")],
+        access_list_id: Annotated[Optional[int], Field(description="NPM access-list ID to attach; omit for no access list.")] = None,
+        block_exploits: Annotated[bool, Field(description="Whether NPM enables its exploit-blocking option.")] = True,
+        caching_enabled: Annotated[bool, Field(description="Whether NPM enables proxy caching.")] = False,
+        allow_websocket_upgrade: Annotated[bool, Field(description="Whether NPM allows WebSocket upgrades.")] = False,
+        dry_run: Annotated[bool, Field(description="When True, return the exact request preview without changing NPM.")] = False,
     ) -> dict:
-        """Create a Let's Encrypt certificate, then create an HTTPS-forced proxy host."""
+        """Request a Let's Encrypt certificate, then create a proxy host using that certificate with HTTPS forced. Use this for a new TLS-enabled proxy; use create_proxy_host when a certificate already exists or HTTPS forcing is not wanted. This triggers a certificate request before creating the host; failures report failed_step and any created certificate. Returns ok plus certificate and proxy_host objects on success. Set dry_run=True to preview the exact request without changing NPM."""
         validate_domain_names(domain_names)
         validate_forward_scheme(forward_scheme)
         validate_host(forward_host, "forward_host")
@@ -165,20 +167,20 @@ class ProxyHostTools:
 
     def update_proxy_host(
         self,
-        id: int,
-        domain_names: Optional[list[str]] = None,
-        forward_scheme: Optional[str] = None,
-        forward_host: Optional[str] = None,
-        forward_port: Optional[int] = None,
-        ssl_forced: Optional[bool] = None,
-        certificate_id: Optional[int] = None,
-        access_list_id: Optional[int] = None,
-        block_exploits: Optional[bool] = None,
-        caching_enabled: Optional[bool] = None,
-        allow_websocket_upgrade: Optional[bool] = None,
-        dry_run: bool = False,
+        id: Annotated[int, Field(description="ID of the proxy host, from the matching list tool.")],
+        domain_names: Annotated[Optional[list[str]], Field(description="Domain names routed by this host or certificate. For updates, omit to keep the current value.")] = None,
+        forward_scheme: Annotated[Optional[str], Field(description="Upstream scheme: http or https. For updates, omit to keep the current value.")] = None,
+        forward_host: Annotated[Optional[str], Field(description="Upstream hostname or IP address. For updates, omit to keep the current value.")] = None,
+        forward_port: Annotated[Optional[int], Field(description="Upstream TCP port number. For updates, omit to keep the current value.")] = None,
+        ssl_forced: Annotated[Optional[bool], Field(description="Whether NPM redirects HTTP requests to HTTPS. For updates, omit to keep the current value.")] = None,
+        certificate_id: Annotated[Optional[int], Field(description="NPM certificate ID to attach. Omit to keep the current value.")] = None,
+        access_list_id: Annotated[Optional[int], Field(description="NPM access-list ID to attach. Omit to keep the current value.")] = None,
+        block_exploits: Annotated[Optional[bool], Field(description="Whether NPM enables its exploit-blocking option. For updates, omit to keep the current value.")] = None,
+        caching_enabled: Annotated[Optional[bool], Field(description="Whether NPM enables proxy caching. For updates, omit to keep the current value.")] = None,
+        allow_websocket_upgrade: Annotated[Optional[bool], Field(description="Whether NPM allows WebSocket upgrades. For updates, omit to keep the current value.")] = None,
+        dry_run: Annotated[bool, Field(description="When True, return the exact request preview without changing NPM.")] = False,
     ) -> dict:
-        """Update fields on a proxy host. Set dry_run=True to preview the merged payload."""
+        """Update writable settings on an existing proxy host by ID. Use this to change routing or options; use enable_proxy_host or disable_proxy_host for status only. NPM receives the merged writable host fields, without requesting a certificate. Returns the updated host object with its ID and current settings. Set dry_run=True to preview the exact request without changing NPM."""
         validate_positive_id(id)
         if domain_names is not None:
             validate_domain_names(domain_names)
@@ -212,22 +214,22 @@ class ProxyHostTools:
             return dry_run_preview("PUT", f"/nginx/proxy-hosts/{id}", existing)
         return self.client.put(f"/nginx/proxy-hosts/{id}", json=existing)
 
-    def delete_proxy_host(self, id: int, dry_run: bool = False) -> bool | dict:
-        """Delete a proxy host permanently. Set dry_run=True to preview only."""
+    def delete_proxy_host(self, id: Annotated[int, Field(description="ID of the proxy host, from the matching list tool.")], dry_run: Annotated[bool, Field(description="When True, return the exact request preview without changing NPM.")] = False) -> bool | dict:
+        """Permanently delete a proxy host by ID, removing its configured domain routing from NPM. Use disable_proxy_host to stop routing while keeping the host; list_proxy_hosts helps confirm the ID. Deletion cannot be undone and NPM applies the configuration change. Returns True on success. Set dry_run=True to preview the exact request without changing NPM."""
         validate_positive_id(id)
         if dry_run:
             return dry_run_preview("DELETE", f"/nginx/proxy-hosts/{id}")
         return self.client.delete(f"/nginx/proxy-hosts/{id}")
 
-    def enable_proxy_host(self, id: int, dry_run: bool = False) -> dict:
-        """Enable a previously disabled proxy host. Set dry_run=True to preview only."""
+    def enable_proxy_host(self, id: Annotated[int, Field(description="ID of the proxy host, from the matching list tool.")], dry_run: Annotated[bool, Field(description="When True, return the exact request preview without changing NPM.")] = False) -> dict:
+        """Enable a disabled proxy host by ID so NPM serves its configured domain routing again. Use update_proxy_host to change host settings; use list_proxy_hosts to confirm status and ID. This changes NPM host state and applies its configuration. Returns the updated host object. Set dry_run=True to preview the exact request without changing NPM."""
         validate_positive_id(id)
         if dry_run:
             return dry_run_preview("POST", f"/nginx/proxy-hosts/{id}/enable")
         return self.client.post(f"/nginx/proxy-hosts/{id}/enable")
 
-    def disable_proxy_host(self, id: int, dry_run: bool = False) -> dict:
-        """Disable a proxy host without deleting it. Set dry_run=True to preview only."""
+    def disable_proxy_host(self, id: Annotated[int, Field(description="ID of the proxy host, from the matching list tool.")], dry_run: Annotated[bool, Field(description="When True, return the exact request preview without changing NPM.")] = False) -> dict:
+        """Disable a proxy host by ID while retaining its configuration. Use delete_proxy_host to remove it; use list_proxy_hosts to check its current status. This changes NPM host state and stops that host from serving traffic. Returns the updated host object. Set dry_run=True to preview the exact request without changing NPM."""
         validate_positive_id(id)
         if dry_run:
             return dry_run_preview("POST", f"/nginx/proxy-hosts/{id}/disable")

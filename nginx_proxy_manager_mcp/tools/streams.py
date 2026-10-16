@@ -1,5 +1,7 @@
 from __future__ import annotations
-from typing import Optional, TYPE_CHECKING
+from typing import Annotated, Optional, TYPE_CHECKING
+
+from pydantic import Field
 
 if TYPE_CHECKING:
     from fastmcp import FastMCP
@@ -20,24 +22,24 @@ class StreamTools:
         self.client = client
 
     def list_streams(self) -> list[dict]:
-        """List all TCP/UDP streams with their current status."""
+        """List configured TCP/UDP streams and their current status. Use this to find stream IDs before fetching, changing, enabling, disabling, or deleting a port forward. This is read-only and does not change NPM. Returns stream objects with IDs, incoming and forwarding ports, protocols, and status."""
         return self.client.get("/nginx/streams")
 
-    def get_stream(self, id: int) -> dict:
-        """Get a single stream by ID."""
+    def get_stream(self, id: Annotated[int, Field(description="ID of the stream, from the matching list tool.")]) -> dict:
+        """Fetch one TCP/UDP stream by ID, including its forwarding ports and protocol settings. Use this for one stream; use list_streams to find IDs or inspect all streams. This is read-only and does not change NPM. Returns the stream object with incoming port, destination, protocol flags, and status."""
         validate_positive_id(id)
         return self.client.get(f"/nginx/streams/{id}")
 
     def create_stream(
         self,
-        incoming_port: int,
-        forwarding_host: str,
-        forwarding_port: int,
-        tcp_forwarding: bool = True,
-        udp_forwarding: bool = False,
-        dry_run: bool = False,
+        incoming_port: Annotated[int, Field(description="Public TCP/UDP port number accepted by this stream.")],
+        forwarding_host: Annotated[str, Field(description="Hostname or IP address receiving stream traffic.")],
+        forwarding_port: Annotated[int, Field(description="Destination TCP/UDP port number.")],
+        tcp_forwarding: Annotated[bool, Field(description="Whether this stream forwards TCP traffic.")] = True,
+        udp_forwarding: Annotated[bool, Field(description="Whether this stream forwards UDP traffic.")] = False,
+        dry_run: Annotated[bool, Field(description="When True, return the exact request preview without changing NPM.")] = False,
     ) -> dict:
-        """Create a TCP/UDP stream. Set dry_run=True to preview without changing NPM."""
+        """Create a TCP/UDP port forward from an incoming port to a destination host and port. Use this for raw TCP or UDP forwarding; use proxy-host tools for HTTP/HTTPS domain routing. NPM stores the stream configuration and applies it through normal config handling. Returns the created stream object with its ID, ports, and protocol flags. Set dry_run=True to preview the exact request without changing NPM."""
         validate_port(incoming_port, "incoming_port")
         validate_host(forwarding_host, "forwarding_host")
         validate_port(forwarding_port, "forwarding_port")
@@ -55,15 +57,15 @@ class StreamTools:
 
     def update_stream(
         self,
-        id: int,
-        incoming_port: Optional[int] = None,
-        forwarding_host: Optional[str] = None,
-        forwarding_port: Optional[int] = None,
-        tcp_forwarding: Optional[bool] = None,
-        udp_forwarding: Optional[bool] = None,
-        dry_run: bool = False,
+        id: Annotated[int, Field(description="ID of the stream, from the matching list tool.")],
+        incoming_port: Annotated[Optional[int], Field(description="Public TCP/UDP port number accepted by this stream. For updates, omit to keep the current value.")] = None,
+        forwarding_host: Annotated[Optional[str], Field(description="Hostname or IP address receiving stream traffic. For updates, omit to keep the current value.")] = None,
+        forwarding_port: Annotated[Optional[int], Field(description="Destination TCP/UDP port number. For updates, omit to keep the current value.")] = None,
+        tcp_forwarding: Annotated[Optional[bool], Field(description="Whether this stream forwards TCP traffic. For updates, omit to keep the current value.")] = None,
+        udp_forwarding: Annotated[Optional[bool], Field(description="Whether this stream forwards UDP traffic. For updates, omit to keep the current value.")] = None,
+        dry_run: Annotated[bool, Field(description="When True, return the exact request preview without changing NPM.")] = False,
     ) -> dict:
-        """Update a stream. Set dry_run=True to preview the merged payload."""
+        """Update writable port, destination, or protocol fields on an existing stream by ID. Use this to edit forwarding; use enable_stream or disable_stream to change status only. NPM receives the merged writable fields, preserving omitted values. Returns the updated stream object with its forwarding settings. Set dry_run=True to preview the exact request without changing NPM."""
         validate_positive_id(id)
         if incoming_port is not None:
             validate_port(incoming_port, "incoming_port")
@@ -91,22 +93,22 @@ class StreamTools:
             return dry_run_preview("PUT", f"/nginx/streams/{id}", existing)
         return self.client.put(f"/nginx/streams/{id}", json=existing)
 
-    def delete_stream(self, id: int, dry_run: bool = False) -> bool | dict:
-        """Delete a stream. Set dry_run=True to preview only."""
+    def delete_stream(self, id: Annotated[int, Field(description="ID of the stream, from the matching list tool.")], dry_run: Annotated[bool, Field(description="When True, return the exact request preview without changing NPM.")] = False) -> bool | dict:
+        """Permanently delete a TCP/UDP stream by ID; NPM stops forwarding that port immediately and this cannot be undone. List streams first to confirm the ID. Returns True on success. Set dry_run=True to preview the exact request without changing NPM."""
         validate_positive_id(id)
         if dry_run:
             return dry_run_preview("DELETE", f"/nginx/streams/{id}")
         return self.client.delete(f"/nginx/streams/{id}")
 
-    def enable_stream(self, id: int, dry_run: bool = False) -> dict:
-        """Enable a stream. Set dry_run=True to preview only."""
+    def enable_stream(self, id: Annotated[int, Field(description="ID of the stream, from the matching list tool.")], dry_run: Annotated[bool, Field(description="When True, return the exact request preview without changing NPM.")] = False) -> dict:
+        """Enable a disabled TCP/UDP stream by ID so NPM forwards its incoming port again. Use update_stream to change ports or protocol flags; list_streams shows current status. This changes the stream state in NPM. Returns the updated stream object. Set dry_run=True to preview the exact request without changing NPM."""
         validate_positive_id(id)
         if dry_run:
             return dry_run_preview("POST", f"/nginx/streams/{id}/enable")
         return self.client.post(f"/nginx/streams/{id}/enable")
 
-    def disable_stream(self, id: int, dry_run: bool = False) -> dict:
-        """Disable a stream. Set dry_run=True to preview only."""
+    def disable_stream(self, id: Annotated[int, Field(description="ID of the stream, from the matching list tool.")], dry_run: Annotated[bool, Field(description="When True, return the exact request preview without changing NPM.")] = False) -> dict:
+        """Disable a TCP/UDP stream by ID while retaining its forwarding configuration. Use delete_stream to remove it; list_streams shows current status. NPM stops forwarding this stream while disabled. Returns the updated stream object. Set dry_run=True to preview the exact request without changing NPM."""
         validate_positive_id(id)
         if dry_run:
             return dry_run_preview("POST", f"/nginx/streams/{id}/disable")

@@ -31,7 +31,7 @@ This server runs either:
 
 ## Features
 
-- 30 MCP tools for common NPM operations.
+- 32 MCP tools for common NPM operations.
 - `dry_run` on all mutating tools to preview NPM requests before applying them;
 - One-shot `create_proxy_host_with_letsencrypt` requests a certificate, then creates an HTTPS-forced proxy host.
 - JWT auth against the NPM API with in-memory token caching and automatic re-authentication on `401`.
@@ -46,6 +46,7 @@ This server runs either:
 | Category | Tools |
 |---|---|
 | Workflows | `create_proxy_host_with_letsencrypt` |
+| Diagnostics | `find_host_by_domain`, `list_expiring_certificates` |
 | Proxy hosts | `list_proxy_hosts`, `get_proxy_host`, `create_proxy_host`, `update_proxy_host`, `delete_proxy_host`, `enable_proxy_host`, `disable_proxy_host` |
 | Redirection hosts | `list_redirection_hosts`, `get_redirection_host`, `create_redirection_host`, `update_redirection_host`, `delete_redirection_host`, `enable_redirection_host`, `disable_redirection_host` |
 | Streams | `list_streams`, `get_stream`, `create_stream`, `update_stream`, `delete_stream`, `enable_stream`, `disable_stream` |
@@ -62,7 +63,7 @@ Competitor facts below come only from their linked READMEs fetched with `gh api 
 
 | Repository | Tool count documented | Dry-run support | Transport | Auth guard |
 |---|---:|---|---|---|
-| [euisuh (this server)](https://github.com/euisuh/nginx-proxy-manager-mcp) | 30 | `dry_run` on all mutating tools | stdio, SSE | Optional SSE bearer token (`MCP_BEARER_TOKEN`); `/healthz` exempt |
+| [euisuh (this server)](https://github.com/euisuh/nginx-proxy-manager-mcp) | 32 | `dry_run` on all mutating tools | stdio, SSE | Optional SSE bearer token (`MCP_BEARER_TOKEN`); `/healthz` exempt |
 | [b3nw](https://github.com/b3nw/nginx-proxy-manager-mcp/blob/725d323b96c5d4e88790b8c88ea790a1133fc2d1/README.md) | 14 named tools (13 catalog rows plus `list_instances`) | not documented | stdio, HTTP | HTTP bearer token (`NPM_MCP_AUTH_TOKEN`) |
 | [omichelbraga](https://github.com/omichelbraga/nginx-proxy-manager-mcp/blob/c6568f0f090c8a087ac9f3a56ac468c139e0a3cb/README.md) | 66 | DELETE without `confirm: true` previews affected resources; general `dry_run` not documented | stdio, Streamable HTTP | Optional bearer token (`NPM_MCP_BEARER_TOKEN`); unset means no inbound auth |
 | [drmogie](https://github.com/drmogie/nginx-proxy-manager-mcp/blob/91c4176b544de6b64b9d16ff6dc891a352951145/README.md) | 4 named tools (`npm_status`, `npm_hosts`, `npm_audit_log`, `npm_call`) | Changes show what will be sent and require `confirm`; `dry_run` not documented | not documented | not documented |

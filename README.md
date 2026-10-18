@@ -192,10 +192,13 @@ Example client config:
 | `NPM_URL` | yes | — | Base URL of the NPM admin API (`http://app:81` inside Docker) |
 | `NPM_EMAIL` | yes | — | NPM admin account email |
 | `NPM_PASSWORD` | yes | — | NPM admin account password |
+| `NPM_READ_ONLY` | no | disabled | `1`, `true`, or `yes` (case-insensitive) registers only `list_`, `get_`, and `find_` tools; all other values disable read-only mode |
 | `MCP_TRANSPORT` | no | `sse` | MCP transport: `sse` or `stdio` |
 | `MCP_HOST` | no | `127.0.0.1` | Bind address for SSE mode; Docker Compose sets `0.0.0.0` inside the container while publishing only to localhost |
 | `MCP_PORT` | no | `8000` | Bind port for SSE mode |
 | `MCP_BEARER_TOKEN` | no | — | Optional bearer token required for SSE HTTP requests |
+
+Set `NPM_READ_ONLY=true` to expose only read-only tools.
 
 Missing required variables make the server exit with a clear error at startup rather than fail on the first API call.
 

@@ -44,14 +44,21 @@ def get_host() -> str:
     return os.environ.get("MCP_HOST", "127.0.0.1")
 
 
+def register_all(mcp: FastMCP, client: NPMClient, read_only: bool) -> None:
+    register_proxy_host_tools(mcp, client, read_only=read_only)
+    register_ssl_cert_tools(mcp, client, read_only=read_only)
+    register_access_list_tools(mcp, client, read_only=read_only)
+    register_redirection_host_tools(mcp, client, read_only=read_only)
+    register_stream_tools(mcp, client, read_only=read_only)
+
+
 def build_server() -> FastMCP:
     validate_env()
     client = NPMClient()
-    register_proxy_host_tools(mcp, client)
-    register_ssl_cert_tools(mcp, client)
-    register_access_list_tools(mcp, client)
-    register_redirection_host_tools(mcp, client)
-    register_stream_tools(mcp, client)
+    read_only = os.environ.get("NPM_READ_ONLY", "").lower() in {"1", "true", "yes"}
+    register_all(mcp, client, read_only)
+    if read_only:
+        print("NPM read-only mode: mutating tools disabled", file=sys.stderr)
     return mcp
 
 

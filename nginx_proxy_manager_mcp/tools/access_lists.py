@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from fastmcp import FastMCP
     from nginx_proxy_manager_mcp.npm_client import NPMClient
 
+from nginx_proxy_manager_mcp.tools import register_tools
 from nginx_proxy_manager_mcp.tools.payloads import update_payload
 from nginx_proxy_manager_mcp.tools.previews import dry_run_preview
 from nginx_proxy_manager_mcp.validation import validate_access_clients, validate_access_items, validate_positive_id
@@ -89,10 +90,12 @@ class AccessListTools:
         return self.client.delete(f"/nginx/access-lists/{id}")
 
 
-def register_access_list_tools(mcp: FastMCP, client: NPMClient) -> None:
+def register_access_list_tools(mcp: FastMCP, client: NPMClient, *, read_only: bool = False) -> None:
     tools = AccessListTools(client)
-    mcp.tool()(tools.list_access_lists)
-    mcp.tool()(tools.get_access_list)
-    mcp.tool()(tools.create_access_list)
-    mcp.tool()(tools.update_access_list)
-    mcp.tool()(tools.delete_access_list)
+    register_tools(mcp, (
+        tools.list_access_lists,
+        tools.get_access_list,
+        tools.create_access_list,
+        tools.update_access_list,
+        tools.delete_access_list,
+    ), read_only)

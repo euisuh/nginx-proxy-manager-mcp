@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from fastmcp import FastMCP
     from nginx_proxy_manager_mcp.npm_client import NPMClient
 
+from nginx_proxy_manager_mcp.tools import register_tools
 from nginx_proxy_manager_mcp.tools.previews import dry_run_preview
 from nginx_proxy_manager_mcp.validation import validate_domain_names, validate_email, validate_positive_id
 
@@ -50,8 +51,10 @@ class SSLCertTools:
         return self.client.post(f"/nginx/certificates/{id}/renew")
 
 
-def register_ssl_cert_tools(mcp: FastMCP, client: NPMClient) -> None:
+def register_ssl_cert_tools(mcp: FastMCP, client: NPMClient, *, read_only: bool = False) -> None:
     tools = SSLCertTools(client)
-    mcp.tool()(tools.list_certificates)
-    mcp.tool()(tools.create_letsencrypt_cert)
-    mcp.tool()(tools.renew_certificate)
+    register_tools(mcp, (
+        tools.list_certificates,
+        tools.create_letsencrypt_cert,
+        tools.renew_certificate,
+    ), read_only)

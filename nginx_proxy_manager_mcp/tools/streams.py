@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from fastmcp import FastMCP
     from nginx_proxy_manager_mcp.npm_client import NPMClient
 
+from nginx_proxy_manager_mcp.tools import register_tools
 from nginx_proxy_manager_mcp.tools.payloads import update_payload
 from nginx_proxy_manager_mcp.tools.previews import dry_run_preview
 from nginx_proxy_manager_mcp.validation import (
@@ -115,12 +116,14 @@ class StreamTools:
         return self.client.post(f"/nginx/streams/{id}/disable")
 
 
-def register_stream_tools(mcp: FastMCP, client: NPMClient) -> None:
+def register_stream_tools(mcp: FastMCP, client: NPMClient, *, read_only: bool = False) -> None:
     tools = StreamTools(client)
-    mcp.tool()(tools.list_streams)
-    mcp.tool()(tools.get_stream)
-    mcp.tool()(tools.create_stream)
-    mcp.tool()(tools.update_stream)
-    mcp.tool()(tools.delete_stream)
-    mcp.tool()(tools.enable_stream)
-    mcp.tool()(tools.disable_stream)
+    register_tools(mcp, (
+        tools.list_streams,
+        tools.get_stream,
+        tools.create_stream,
+        tools.update_stream,
+        tools.delete_stream,
+        tools.enable_stream,
+        tools.disable_stream,
+    ), read_only)

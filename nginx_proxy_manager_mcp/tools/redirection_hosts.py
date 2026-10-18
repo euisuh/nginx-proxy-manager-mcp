@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from fastmcp import FastMCP
     from nginx_proxy_manager_mcp.npm_client import NPMClient
 
+from nginx_proxy_manager_mcp.tools import register_tools
 from nginx_proxy_manager_mcp.tools.payloads import update_payload
 from nginx_proxy_manager_mcp.tools.previews import dry_run_preview
 from nginx_proxy_manager_mcp.validation import (
@@ -132,12 +133,14 @@ class RedirectionHostTools:
         return self.client.post(f"/nginx/redirection-hosts/{id}/disable")
 
 
-def register_redirection_host_tools(mcp: FastMCP, client: NPMClient) -> None:
+def register_redirection_host_tools(mcp: FastMCP, client: NPMClient, *, read_only: bool = False) -> None:
     tools = RedirectionHostTools(client)
-    mcp.tool()(tools.list_redirection_hosts)
-    mcp.tool()(tools.get_redirection_host)
-    mcp.tool()(tools.create_redirection_host)
-    mcp.tool()(tools.update_redirection_host)
-    mcp.tool()(tools.delete_redirection_host)
-    mcp.tool()(tools.enable_redirection_host)
-    mcp.tool()(tools.disable_redirection_host)
+    register_tools(mcp, (
+        tools.list_redirection_hosts,
+        tools.get_redirection_host,
+        tools.create_redirection_host,
+        tools.update_redirection_host,
+        tools.delete_redirection_host,
+        tools.enable_redirection_host,
+        tools.disable_redirection_host,
+    ), read_only)

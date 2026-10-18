@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Annotated, TYPE_CHECKING
+from typing import Annotated, Optional, TYPE_CHECKING
 
 from pydantic import Field
 
@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from nginx_proxy_manager_mcp.npm_client import NPMClient
 
 from nginx_proxy_manager_mcp.tools import register_tools
+from nginx_proxy_manager_mcp.tools.filters import filter_items
 from nginx_proxy_manager_mcp.tools.previews import dry_run_preview
 from nginx_proxy_manager_mcp.validation import validate_domain_names, validate_email, validate_positive_id
 
@@ -16,9 +17,23 @@ class SSLCertTools:
     def __init__(self, client: NPMClient) -> None:
         self.client = client
 
-    def list_certificates(self) -> list[dict]:
-        """List SSL certificates known to NPM, including expiry information when provided by NPM. Use this to inspect available certificates; create_letsencrypt_cert requests a new certificate and renew_certificate renews an existing one. This is read-only and makes no certificate request. Returns certificate objects with IDs, domains, provider, and expiry fields."""
-        return self.client.get("/nginx/certificates")
+    def list_certificates(
+        self,
+        domain: Annotated[Optional[str], Field(description="Case-insensitive substring to match against any domain name; omit for all domains.")] = None,
+        compact: Annotated[bool, Field(description="Return only summary fields when True; defaults to full NPM objects.")] = False,
+    ) -> list[dict]:
+        """List SSL certificates known to NPM, including expiry information when provided by NPM. Use this to inspect available certificates; create_letsencrypt_cert requests a new certificate and renew_certificate renews an existing one. This is read-only and makes no certificate request. Filter domain names by a case-insensitive substring with domain. Set compact=True to return only summary fields. Returns certificate objects with IDs, domains, provider, and expiry fields."""
+        return filter_items(
+            self.client.get("/nginx/certificates"),
+            domain=domain,
+            compact=compact,
+            compact_keys=(
+                "id",
+                "provider",
+                "domain_names",
+                "expires_on",
+            ),
+        )
 
     def create_letsencrypt_cert(
         self,

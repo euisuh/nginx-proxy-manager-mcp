@@ -4,6 +4,7 @@ from fastmcp import FastMCP
 
 from nginx_proxy_manager_mcp.server import (
     register_access_list_tools,
+    register_diagnose_tools,
     register_proxy_host_tools,
     register_redirection_host_tools,
     register_ssl_cert_tools,
@@ -23,12 +24,13 @@ def registered_tools():
     register_access_list_tools(mcp, client)
     register_redirection_host_tools(mcp, client)
     register_stream_tools(mcp, client)
+    register_diagnose_tools(mcp, client)
     return asyncio.run(mcp.list_tools())
 
 
 def test_registered_tool_descriptions_are_complete():
     tools = registered_tools()
-    assert len(tools) == 30
+    assert len(tools) == 32
 
     for tool in tools:
         assert len(tool.description or "") >= 140, tool.name

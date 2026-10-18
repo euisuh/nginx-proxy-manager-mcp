@@ -7,6 +7,7 @@ from starlette.middleware import Middleware
 from nginx_proxy_manager_mcp.auth import BearerTokenAuthMiddleware, HealthCheckMiddleware
 from nginx_proxy_manager_mcp.npm_client import NPMClient
 from nginx_proxy_manager_mcp.tools.access_lists import register_access_list_tools
+from nginx_proxy_manager_mcp.tools.diagnose import register_diagnose_tools
 from nginx_proxy_manager_mcp.tools.proxy_hosts import register_proxy_host_tools
 from nginx_proxy_manager_mcp.tools.redirection_hosts import register_redirection_host_tools
 from nginx_proxy_manager_mcp.tools.ssl_certs import register_ssl_cert_tools
@@ -50,6 +51,7 @@ def register_all(mcp: FastMCP, client: NPMClient, read_only: bool) -> None:
     register_access_list_tools(mcp, client, read_only=read_only)
     register_redirection_host_tools(mcp, client, read_only=read_only)
     register_stream_tools(mcp, client, read_only=read_only)
+    register_diagnose_tools(mcp, client, read_only=read_only)
 
 
 def build_server() -> FastMCP:

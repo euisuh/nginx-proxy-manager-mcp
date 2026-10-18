@@ -187,3 +187,55 @@ def test_disable_proxy_host_dry_run_does_not_post(tools, client):
     result = tools.disable_proxy_host(2, dry_run=True)
     assert result == {"dry_run": True, "method": "POST", "path": "/nginx/proxy-hosts/2/disable"}
     client.post.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "kwargs, expected_ids",
+    [
+        ({}, [1, 2]),
+        ({"compact": True}, [1, 2]),
+        ({"domain": "EXAMPLE"}, [1]),
+        ({"domain": "absent"}, []),
+        ({"enabled": True}, [1]),
+        ({"enabled": False}, [2]),
+        ({"compact": True, "domain": "example", "enabled": True}, [1]),
+    ],
+)
+def test_list_proxy_hosts_filters(tools, client, kwargs, expected_ids):
+    keys = [
+        "id",
+        "domain_names",
+        "forward_scheme",
+        "forward_host",
+        "forward_port",
+        "certificate_id",
+        "ssl_forced",
+        "enabled",
+    ]
+    first = {key: f"value-{key}" for key in reversed(keys)}
+    first.update(
+        id=1, enabled=1, domain_names=["other.org", "App.Example.com"], extra={"nested": True}
+    )
+    second = {"id": 2, "enabled": 0, "domain_names": ["b.org"], "extra": 9}
+    items = [first, second]
+    client.get.return_value = items
+    original = [dict(item) for item in items]
+
+    result = tools.list_proxy_hosts(**kwargs)
+
+    assert [item["id"] for item in result] == expected_ids
+    if kwargs.get("compact"):
+        expected = [
+            {key: item[key] for key in keys if key in item}
+            for item in items
+            if item["id"] in expected_ids
+        ]
+        assert result == expected
+        for item in result:
+            assert list(item) == [key for key in keys if key in item]
+    else:
+        assert result == [item for item in items if item["id"] in expected_ids]
+    if not kwargs:
+        assert result is items
+    assert items == original
+    client.get.assert_called_once_with("/nginx/proxy-hosts")

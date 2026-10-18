@@ -52,6 +52,8 @@ This server runs either:
 | SSL certs | `list_certificates`, `create_letsencrypt_cert`, `renew_certificate` |
 | Access lists | `list_access_lists`, `get_access_list`, `create_access_list`, `update_access_list`, `delete_access_list` |
 
+List tools support optional server-side filtering after fetching from NPM: `domain` matches a case-insensitive substring in any domain name for proxy hosts, redirection hosts, and certificates; `enabled` filters proxy hosts, redirection hosts, and streams by status. All four accept `compact=True` to return only summary fields. Filters combine, and calls without arguments return the full, unchanged NPM list. For example, `list_proxy_hosts(domain="example", enabled=True, compact=True)` lists enabled hosts matching "example" with compact output.
+
 All mutating tools expose `dry_run=True`. Previews contain `method` and `path`, plus `json` when the request has a body; the HTTPS workflow returns two previews in `steps`. The flag suppresses mutating requests, though some previews read current state. Update tools send only the fields in NPM's PUT schema (fixes [#19](https://github.com/euisuh/nginx-proxy-manager-mcp/issues/19)); this is covered by mocked tests and not yet checked against a live NPM instance.
 
 ## Compared to other NPM MCP servers

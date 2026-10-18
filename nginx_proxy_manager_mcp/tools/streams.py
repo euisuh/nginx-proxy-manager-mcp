@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from nginx_proxy_manager_mcp.npm_client import NPMClient
 
 from nginx_proxy_manager_mcp.tools import register_tools
+from nginx_proxy_manager_mcp.tools.filters import filter_items
 from nginx_proxy_manager_mcp.tools.payloads import update_payload
 from nginx_proxy_manager_mcp.tools.previews import dry_run_preview
 from nginx_proxy_manager_mcp.validation import (
@@ -22,9 +23,26 @@ class StreamTools:
     def __init__(self, client: NPMClient) -> None:
         self.client = client
 
-    def list_streams(self) -> list[dict]:
-        """List configured TCP/UDP streams and their current status. Use this to find stream IDs before fetching, changing, enabling, disabling, or deleting a port forward. This is read-only and does not change NPM. Returns stream objects with IDs, incoming and forwarding ports, protocols, and status."""
-        return self.client.get("/nginx/streams")
+    def list_streams(
+        self,
+        enabled: Annotated[Optional[bool], Field(description="Keep items with this enabled status; omit for both enabled and disabled items.")] = None,
+        compact: Annotated[bool, Field(description="Return only summary fields when True; defaults to full NPM objects.")] = False,
+    ) -> list[dict]:
+        """List configured TCP/UDP streams and their current status. Use this to find stream IDs before fetching, changing, enabling, disabling, or deleting a port forward. This is read-only and does not change NPM. Filter status with enabled. Set compact=True to return only summary fields. Returns stream objects with IDs, incoming and forwarding ports, protocols, and status."""
+        return filter_items(
+            self.client.get("/nginx/streams"),
+            enabled=enabled,
+            compact=compact,
+            compact_keys=(
+                "id",
+                "incoming_port",
+                "forwarding_host",
+                "forwarding_port",
+                "tcp_forwarding",
+                "udp_forwarding",
+                "enabled",
+            ),
+        )
 
     def get_stream(self, id: Annotated[int, Field(description="ID of the stream, from the matching list tool.")]) -> dict:
         """Fetch one TCP/UDP stream by ID, including its forwarding ports and protocol settings. Use this for one stream; use list_streams to find IDs or inspect all streams. This is read-only and does not change NPM. Returns the stream object with incoming port, destination, protocol flags, and status."""

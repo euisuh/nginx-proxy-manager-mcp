@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from nginx_proxy_manager_mcp.npm_client import NPMClient
 
 from nginx_proxy_manager_mcp.tools import register_tools
+from nginx_proxy_manager_mcp.tools.filters import filter_items
 from nginx_proxy_manager_mcp.tools.payloads import update_payload
 from nginx_proxy_manager_mcp.tools.previews import dry_run_preview
 from nginx_proxy_manager_mcp.validation import (
@@ -24,9 +25,28 @@ class RedirectionHostTools:
     def __init__(self, client: NPMClient) -> None:
         self.client = client
 
-    def list_redirection_hosts(self) -> list[dict]:
-        """List configured redirection hosts and their current status. Use this to find IDs before fetching, changing, enabling, disabling, or deleting a redirect; proxy hosts handle upstream reverse proxying. This is read-only and does not request certificates. Returns host objects with domains, destination, redirect code, and status."""
-        return self.client.get("/nginx/redirection-hosts")
+    def list_redirection_hosts(
+        self,
+        domain: Annotated[Optional[str], Field(description="Case-insensitive substring to match against any domain name; omit for all domains.")] = None,
+        enabled: Annotated[Optional[bool], Field(description="Keep items with this enabled status; omit for both enabled and disabled items.")] = None,
+        compact: Annotated[bool, Field(description="Return only summary fields when True; defaults to full NPM objects.")] = False,
+    ) -> list[dict]:
+        """List configured redirection hosts and their current status. Use this to find IDs before fetching, changing, enabling, disabling, or deleting a redirect; proxy hosts handle upstream reverse proxying. This is read-only and does not request certificates. Filter domain names by a case-insensitive substring with domain. Filter status with enabled. Set compact=True to return only summary fields. Returns host objects with domains, destination, redirect code, and status."""
+        return filter_items(
+            self.client.get("/nginx/redirection-hosts"),
+            domain=domain,
+            enabled=enabled,
+            compact=compact,
+            compact_keys=(
+                "id",
+                "domain_names",
+                "forward_scheme",
+                "forward_domain_name",
+                "forward_http_code",
+                "certificate_id",
+                "enabled",
+            ),
+        )
 
     def get_redirection_host(self, id: Annotated[int, Field(description="ID of the redirection host, from the matching list tool.")]) -> dict:
         """Fetch one redirection host by ID with its configured destination and status. Use this for a single redirect; use list_redirection_hosts to discover IDs or inspect all redirects. This is read-only and does not change NPM. Returns the host object with domains, destination, redirect code, and status."""

@@ -48,3 +48,20 @@ def update_payload(
                     for entry in payload[key]
                 ]
     return payload
+
+
+def letsencrypt_payload(
+    client: Any, domain_names: list[str], email: str | None, dns_challenge: bool = False,
+) -> dict[str, Any]:
+    """Build a POST /nginx/certificates body for the connected NPM version.
+
+    NPM 2.13.0 removed letsencrypt_email/letsencrypt_agree from the certificate meta
+    schema (additionalProperties: false) and registers with the NPM user's account
+    email instead, so sending them makes every request fail with HTTP 400.
+    """
+    meta: dict[str, Any] = {"dns_challenge": dns_challenge}
+    if client.npm_version() < (2, 13):
+        if email is None:
+            raise ValueError("email is required for Let's Encrypt on NPM versions before 2.13")
+        meta.update(letsencrypt_email=email, letsencrypt_agree=True)
+    return {"provider": "letsencrypt", "domain_names": domain_names, "meta": meta}

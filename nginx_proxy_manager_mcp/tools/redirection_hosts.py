@@ -96,7 +96,7 @@ class RedirectionHostTools:
         forward_scheme: Annotated[Optional[str], Field(description="Scheme of the redirect destination: http or https. For updates, omit to keep the current value.")] = None,
         preserve_path: Annotated[Optional[bool], Field(description="Whether to preserve the original request path in the redirect. For updates, omit to keep the current value.")] = None,
         ssl_forced: Annotated[Optional[bool], Field(description="Whether NPM redirects HTTP requests to HTTPS. For updates, omit to keep the current value.")] = None,
-        certificate_id: Annotated[Optional[int], Field(description="NPM certificate ID to attach. Omit to keep the current value.")] = None,
+        certificate_id: Annotated[Optional[int], Field(description="NPM certificate ID to attach, or 0 to detach. Omit to keep the current value.")] = None,
         block_exploits: Annotated[Optional[bool], Field(description="Whether NPM enables its exploit-blocking option. For updates, omit to keep the current value.")] = None,
         dry_run: Annotated[bool, Field(description="When True, return the exact request preview without changing NPM.")] = False,
     ) -> dict:
@@ -110,7 +110,7 @@ class RedirectionHostTools:
             validate_redirect_code(forward_http_code)
         if forward_scheme is not None:
             validate_forward_scheme(forward_scheme)
-        validate_optional_positive_id(certificate_id, "certificate_id")
+        validate_optional_positive_id(certificate_id or None, "certificate_id")  # 0 detaches
         existing = self.client.get(f"/nginx/redirection-hosts/{id}")
         updates = {
             k: v

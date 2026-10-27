@@ -138,3 +138,10 @@ def test_list_redirection_hosts_filters(tools, client, kwargs, expected_ids):
         assert result is items
     assert items == original
     client.get.assert_called_once_with("/nginx/redirection-hosts")
+
+
+def test_update_redirection_host_zero_detaches_certificate(tools, client):
+    client.get.return_value = {"id": 1, "certificate_id": 5}
+    client.put.return_value = {"id": 1}
+    tools.update_redirection_host(1, certificate_id=0)
+    assert client.put.call_args[1]["json"]["certificate_id"] == 0

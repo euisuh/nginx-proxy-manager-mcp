@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 from nginx_proxy_manager_mcp.tools import register_tools
 from nginx_proxy_manager_mcp.tools.filters import filter_items
+from nginx_proxy_manager_mcp.tools.payloads import letsencrypt_payload
 from nginx_proxy_manager_mcp.tools.previews import dry_run_preview
 from nginx_proxy_manager_mcp.validation import validate_domain_names, validate_email, validate_positive_id
 
@@ -38,22 +39,15 @@ class SSLCertTools:
     def create_letsencrypt_cert(
         self,
         domain_names: Annotated[list[str], Field(description="Domain names routed by this host or certificate.")],
-        email: Annotated[str, Field(description="Email address supplied to Let's Encrypt for certificate requests.")],
+        email: Annotated[Optional[str], Field(description="Let's Encrypt account email. Required on NPM before 2.13; ignored on 2.13+, where NPM uses the NPM user's account email.")] = None,
         dns_challenge: Annotated[bool, Field(description="Use DNS validation instead of HTTP validation for the certificate request.")] = False,
         dry_run: Annotated[bool, Field(description="When True, return the exact request preview without changing NPM.")] = False,
     ) -> dict:
         """Request a new Let's Encrypt certificate for the supplied domains. Use this when a certificate is needed without creating a proxy host; create_proxy_host_with_letsencrypt also creates an HTTPS-forced host. This sends a certificate request to NPM and may contact Let's Encrypt. Returns the certificate object with its ID, domains, and status. Set dry_run=True to preview the exact request without changing NPM."""
         validate_domain_names(domain_names)
-        validate_email(email)
-        payload = {
-            "provider": "letsencrypt",
-            "domain_names": domain_names,
-            "meta": {
-                "letsencrypt_email": email,
-                "letsencrypt_agree": True,
-                "dns_challenge": dns_challenge,
-            },
-        }
+        if email is not None:
+            validate_email(email)
+        payload = letsencrypt_payload(self.client, domain_names, email, dns_challenge)
         if dry_run:
             return dry_run_preview("POST", "/nginx/certificates", payload)
         return self.client.post("/nginx/certificates", json=payload)

@@ -24,7 +24,14 @@ class AccessListTools:
     def get_access_list(self, id: Annotated[int, Field(description="ID of the access list, from the matching list tool.")]) -> dict:
         """Fetch one access list by ID, including its client rules and basic-auth user metadata. Use this for detailed rules; use list_access_lists to discover IDs. NPM does not return stored item passwords, so password values cannot be read back. Returns the access-list object with name, clients, and user entries."""
         validate_positive_id(id)
-        return self.client.get(f"/nginx/access-lists/{id}")
+        # NPM omits rules unless expanded.
+        access_list = self.client.get(
+            f"/nginx/access-lists/{id}", params={"expand": "items,clients"},
+        )
+        for item in access_list.get("items") or []:
+            # NPM's masked "hint" is the password's first character plus its length.
+            item.pop("hint", None)
+        return access_list
 
     def create_access_list(
         self,

@@ -51,7 +51,13 @@ def update_payload(
 
 
 def letsencrypt_payload(
-    client: Any, domain_names: list[str], email: str | None, dns_challenge: bool = False,
+    client: Any,
+    domain_names: list[str],
+    email: str | None,
+    dns_challenge: bool = False,
+    dns_provider: str | None = None,
+    dns_provider_credentials: str | None = None,
+    propagation_seconds: int | None = None,
 ) -> dict[str, Any]:
     """Build a POST /nginx/certificates body for the connected NPM version.
 
@@ -59,9 +65,34 @@ def letsencrypt_payload(
     schema (additionalProperties: false) and registers with the NPM user's account
     email instead, so sending them makes every request fail with HTTP 400.
     """
+    dns_fields = {
+        "dns_provider": dns_provider,
+        "dns_provider_credentials": dns_provider_credentials,
+        "propagation_seconds": propagation_seconds,
+    }
+    if dns_challenge:
+        if not dns_provider or not dns_provider_credentials:
+            raise ValueError("dns_challenge requires dns_provider and dns_provider_credentials")
+        if propagation_seconds is not None and (
+            not isinstance(propagation_seconds, int) or propagation_seconds < 0
+        ):
+            raise ValueError("propagation_seconds must be a non-negative integer")
+    else:
+        if any(value is not None for value in dns_fields.values()):
+            raise ValueError("dns_provider, dns_provider_credentials and propagation_seconds need dns_challenge=True")
+        if any(name.startswith("*.") for name in domain_names):
+            raise ValueError("wildcard domains need dns_challenge=True; Let's Encrypt has no HTTP-01 for wildcards")
     meta: dict[str, Any] = {"dns_challenge": dns_challenge}
+    meta.update({key: value for key, value in dns_fields.items() if value is not None})
     if client.npm_version() < (2, 13):
         if email is None:
             raise ValueError("email is required for Let's Encrypt on NPM versions before 2.13")
         meta.update(letsencrypt_email=email, letsencrypt_agree=True)
     return {"provider": "letsencrypt", "domain_names": domain_names, "meta": meta}
+
+
+def redact_certificate_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """Copy of a certificate request with the DNS API secret masked, for previews."""
+    if "dns_provider_credentials" not in payload["meta"]:
+        return payload
+    return {**payload, "meta": {**payload["meta"], "dns_provider_credentials": "<redacted>"}}

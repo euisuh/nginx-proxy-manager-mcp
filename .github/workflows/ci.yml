@@ -47,6 +47,10 @@ jobs:
           - 8181:81
         env:
           DISABLE_IPV6: "true"
+        # the image refuses to start unless these paths are mounted
+        volumes:
+          - npm-data:/data
+          - npm-letsencrypt:/etc/letsencrypt
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

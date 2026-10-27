@@ -20,11 +20,25 @@ def test_list_access_lists(tools, client):
     client.get.assert_called_once_with("/nginx/access-lists")
 
 
-def test_get_access_list(tools, client):
+def test_get_access_list_expands_rules(tools, client):
+    # Without ?expand NPM returns neither items nor clients.
     client.get.return_value = {"id": 2, "name": "Admins", "clients": [], "items": []}
     result = tools.get_access_list(2)
     assert result["name"] == "Admins"
-    client.get.assert_called_once_with("/nginx/access-lists/2")
+    client.get.assert_called_once_with(
+        "/nginx/access-lists/2", params={"expand": "items,clients"},
+    )
+
+
+def test_get_access_list_strips_password_hint(tools, client):
+    # NPM masks passwords as "" but adds a hint revealing the first character and length.
+    client.get.return_value = {
+        "id": 2,
+        "items": [{"id": 1, "username": "alice", "password": "", "hint": "s*******"}],
+        "clients": [],
+    }
+    result = tools.get_access_list(2)
+    assert result["items"] == [{"id": 1, "username": "alice", "password": ""}]
 
 
 def test_create_access_list_defaults(tools, client):

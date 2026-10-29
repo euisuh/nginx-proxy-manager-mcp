@@ -24,7 +24,7 @@ The MCP server must already be configured for the intended NPM instance.
 ## Example
 
 User: “expose app on port 3000 at blog.example.com”. With upstream `app`
-and a user-approved certificate email, call `create_proxy_host_with_letsencrypt`
-with `domain_names=["blog.example.com"]`, `forward_scheme="http"`,
-`forward_host="app"`, `forward_port=3000`, `email=<approved email>`,
-and `dry_run=True`. Show both previews. Apply only after user OK.
+call `create_proxy_host_with_letsencrypt` with
+`domain_names=["blog.example.com"]`, `forward_scheme="http"`,
+`forward_host="app"`, `forward_port=3000`, and `dry_run=True`
+(NPM before 2.13 also needs a user-approved `email`). Show both previews. Apply only after user OK.

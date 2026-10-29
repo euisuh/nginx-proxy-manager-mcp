@@ -24,6 +24,6 @@ Include:
 - Bind SSE deployments to `127.0.0.1` on the host unless another trusted network boundary exists.
 - Bare SSE runs default to `127.0.0.1`; Docker Compose binds the host port to localhost while the container listens on `0.0.0.0` internally.
 - Set `MCP_BEARER_TOKEN` for SSE deployments that can be reached beyond localhost.
-- Use a dedicated NPM admin account where possible.
+- Use a dedicated NPM user with only the permissions the assistant needs (see "NPM credential scope" in the README); it does not need admin rights.
 - Keep NPM credentials in environment variables or a secrets manager; do not commit `.env`.
 - Assume any MCP client that can reach this server can create, update, disable, or delete proxy hosts and certificates.

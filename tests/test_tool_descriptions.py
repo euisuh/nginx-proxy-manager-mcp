@@ -30,7 +30,7 @@ def registered_tools():
 
 def test_registered_tool_descriptions_are_complete():
     tools = registered_tools()
-    assert len(tools) == 32
+    assert len(tools) == 34
 
     for tool in tools:
         assert len(tool.description or "") >= 140, tool.name

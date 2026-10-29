@@ -134,3 +134,86 @@ def test_list_certificates_filters(tools, client, kwargs, expected_ids):
         assert result is items
     assert items == original
     client.get.assert_called_once_with("/nginx/certificates")
+
+
+def test_get_certificate(tools, client):
+    client.get.return_value = {"id": 5, "provider": "letsencrypt"}
+    assert tools.get_certificate(5)["id"] == 5
+    client.get.assert_called_once_with("/nginx/certificates/5")
+
+
+def test_delete_certificate(tools, client):
+    client.delete.return_value = True
+    assert tools.delete_certificate(5) is True
+    client.delete.assert_called_once_with("/nginx/certificates/5")
+
+
+def test_delete_certificate_dry_run_does_not_delete(tools, client):
+    result = tools.delete_certificate(5, dry_run=True)
+    assert result == {"dry_run": True, "method": "DELETE", "path": "/nginx/certificates/5"}
+    client.delete.assert_not_called()
+
+
+def test_get_and_delete_certificate_reject_bad_id(tools, client):
+    with pytest.raises(ValueError):
+        tools.get_certificate(0)
+    with pytest.raises(ValueError):
+        tools.delete_certificate(-3)
+    client.get.assert_not_called()
+    client.delete.assert_not_called()
+
+
+DNS_ARGS = {
+    "dns_challenge": True,
+    "dns_provider": "cloudflare",
+    "dns_provider_credentials": "dns_cloudflare_api_token = s3cret",
+}
+
+
+def test_create_letsencrypt_cert_dns_challenge_wildcard(tools, client):
+    client.post.return_value = {"id": 7}
+    tools.create_letsencrypt_cert(
+        domain_names=["*.example.com", "example.com"], propagation_seconds=60, **DNS_ARGS,
+    )
+    assert client.post.call_args[1]["json"]["meta"] == {
+        "dns_challenge": True,
+        "dns_provider": "cloudflare",
+        "dns_provider_credentials": "dns_cloudflare_api_token = s3cret",
+        "propagation_seconds": 60,
+    }
+
+
+def test_create_letsencrypt_cert_dns_dry_run_redacts_credentials(tools, client):
+    result = tools.create_letsencrypt_cert(domain_names=["*.example.com"], dry_run=True, **DNS_ARGS)
+    assert result["json"]["meta"]["dns_provider_credentials"] == "<redacted>"
+    assert "s3cret" not in str(result)
+    client.post.assert_not_called()
+
+
+def test_create_letsencrypt_cert_dns_challenge_requires_provider_and_credentials(tools, client):
+    with pytest.raises(ValueError, match="dns_provider"):
+        tools.create_letsencrypt_cert(domain_names=["example.com"], dns_challenge=True)
+    with pytest.raises(ValueError, match="dns_provider"):
+        tools.create_letsencrypt_cert(
+            domain_names=["example.com"], dns_challenge=True, dns_provider="cloudflare",
+        )
+    client.post.assert_not_called()
+
+
+def test_create_letsencrypt_cert_dns_fields_need_dns_challenge(tools, client):
+    with pytest.raises(ValueError, match="dns_challenge=True"):
+        tools.create_letsencrypt_cert(domain_names=["example.com"], dns_provider="cloudflare")
+    client.post.assert_not_called()
+
+
+def test_create_letsencrypt_cert_rejects_negative_propagation(tools, client):
+    with pytest.raises(ValueError, match="propagation_seconds"):
+        tools.create_letsencrypt_cert(
+            domain_names=["example.com"], propagation_seconds=-1, **DNS_ARGS,
+        )
+
+
+def test_create_letsencrypt_cert_wildcard_over_http_is_rejected(tools, client):
+    with pytest.raises(ValueError, match="wildcard"):
+        tools.create_letsencrypt_cert(domain_names=["*.example.com"])
+    client.post.assert_not_called()

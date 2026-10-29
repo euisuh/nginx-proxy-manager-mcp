@@ -267,3 +267,13 @@ def test_update_proxy_host_rejects_negative_certificate_id(tools, client):
     with pytest.raises(ValueError, match="certificate_id"):
         tools.update_proxy_host(1, certificate_id=-1)
     client.get.assert_not_called()
+
+
+def test_create_proxy_host_with_letsencrypt_rejects_wildcard(tools, client):
+    # The workflow uses HTTP-01, which Let's Encrypt does not offer for wildcards.
+    with pytest.raises(ValueError, match="wildcard"):
+        tools.create_proxy_host_with_letsencrypt(
+            domain_names=["*.example.com"], forward_scheme="http",
+            forward_host="app", forward_port=80, dry_run=True,
+        )
+    client.post.assert_not_called()

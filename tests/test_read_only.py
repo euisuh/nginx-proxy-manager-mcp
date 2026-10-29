@@ -7,14 +7,14 @@ from nginx_proxy_manager_mcp import server
 
 
 READ_ONLY_NAMES = {
-    "list_proxy_hosts", "get_proxy_host", "list_certificates",
+    "list_proxy_hosts", "get_proxy_host", "list_certificates", "get_certificate",
     "list_access_lists", "get_access_list", "list_streams", "get_stream",
     "list_redirection_hosts", "get_redirection_host",
 }
 MUTATING_NAMES = {
     "create_proxy_host", "create_proxy_host_with_letsencrypt", "update_proxy_host",
     "delete_proxy_host", "enable_proxy_host", "disable_proxy_host",
-    "create_letsencrypt_cert", "renew_certificate",
+    "create_letsencrypt_cert", "delete_certificate", "renew_certificate",
     "create_access_list", "update_access_list", "delete_access_list",
     "create_stream", "update_stream", "delete_stream", "enable_stream", "disable_stream",
     "create_redirection_host", "update_redirection_host", "delete_redirection_host",

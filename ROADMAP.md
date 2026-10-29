@@ -16,7 +16,9 @@ This project is intentionally small: one MCP server that gives AI assistants saf
 - Optional bearer-token guard for SSE deployments.
 - Unauthenticated `/healthz` liveness endpoint for SSE sidecars.
 - Safer loopback default for bare SSE runs.
-- Lightweight CI quality gate with Ruff.
+- Lightweight CI quality gate with Ruff; tests on Python 3.10–3.13.
+- NPM 2.13+ certificate request shape (version read from `GET /api/`).
+- Let's Encrypt DNS-01 / wildcard certificates; `get_certificate` and `delete_certificate`.
 
 ## Next: distribution and MCP directory readiness
 
@@ -26,7 +28,7 @@ This project is intentionally small: one MCP server that gives AI assistants saf
 ## Next: broader NPM coverage
 
 - 404 hosts and dead hosts.
-- Custom certificates: upload/list/renew/delete where supported by the NPM API.
+- Custom certificate upload/download.
 - Users and audit-log read-only tools.
 
 ## Next: operational hardening

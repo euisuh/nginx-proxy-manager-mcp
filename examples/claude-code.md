@@ -3,13 +3,14 @@
 ## SSE sidecar
 
 ```bash
-claude mcp add nginx-proxy-manager http://localhost:8000/sse
+claude mcp add --transport sse nginx-proxy-manager http://localhost:8000/sse
 ```
 
-If `MCP_BEARER_TOKEN` is set, configure your client or gateway to send:
+If `MCP_BEARER_TOKEN` is set, add the header:
 
-```text
-Authorization: Bearer YOUR_TOKEN
+```bash
+claude mcp add --transport sse nginx-proxy-manager http://localhost:8000/sse \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ## stdio

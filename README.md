@@ -7,7 +7,7 @@
 [![Python Package](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/python-package.yml/badge.svg)](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/python-package.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-An MCP server for [Nginx Proxy Manager](https://nginxproxymanager.com/). It lets Claude and other MCP clients manage reverse-proxy hosts, Let's Encrypt certificates, and access lists through typed tools instead of clicking through the NPM admin UI.
+An MCP server for [Nginx Proxy Manager](https://nginxproxymanager.com/). It lets Claude and other MCP clients manage proxy hosts, redirection hosts, TCP/UDP streams, Let's Encrypt certificates, and access lists through typed tools instead of clicking through the NPM admin UI.
 
 ```text
 "Point blog.example.com at the container on port 3000 with HTTPS"
@@ -31,27 +31,60 @@ This server runs either:
 
 ## Features
 
-- 32 MCP tools for common NPM operations.
-- `dry_run` on all mutating tools to preview NPM requests before applying them;
+- 34 MCP tools for common NPM operations (table below).
+- `dry_run` on all mutating tools to preview NPM requests before applying them.
 - One-shot `create_proxy_host_with_letsencrypt` requests a certificate, then creates an HTTPS-forced proxy host.
+- Let's Encrypt over HTTP-01 or DNS-01 (wildcards), with the request shape picked from the NPM version reported by `GET /api/`.
+- `NPM_READ_ONLY=true` registers only the 12 `list_`/`get_`/`find_` tools.
 - JWT auth against the NPM API with in-memory token caching and automatic re-authentication on `401`.
 - Docker sidecar deployment that binds the MCP port to localhost by default.
-- Offline pytest suite with mocked NPM API responses.
+- Offline pytest suite with mocked NPM API responses, including end-to-end calls through the MCP protocol layer; CI runs it on Python 3.10–3.13.
 - Ruff quality gate and contributor templates for public maintenance.
 - Python wheel build validation and MCP directory metadata for promotion readiness.
 - No token persistence and no hardcoded credentials.
 
 ## Tools
 
-| Category | Tools |
-|---|---|
-| Workflows | `create_proxy_host_with_letsencrypt` |
-| Diagnostics | `find_host_by_domain`, `list_expiring_certificates` |
-| Proxy hosts | `list_proxy_hosts`, `get_proxy_host`, `create_proxy_host`, `update_proxy_host`, `delete_proxy_host`, `enable_proxy_host`, `disable_proxy_host` |
-| Redirection hosts | `list_redirection_hosts`, `get_redirection_host`, `create_redirection_host`, `update_redirection_host`, `delete_redirection_host`, `enable_redirection_host`, `disable_redirection_host` |
-| Streams | `list_streams`, `get_stream`, `create_stream`, `update_stream`, `delete_stream`, `enable_stream`, `disable_stream` |
-| SSL certs | `list_certificates`, `create_letsencrypt_cert`, `renew_certificate` |
-| Access lists | `list_access_lists`, `get_access_list`, `create_access_list`, `update_access_list`, `delete_access_list` |
+<!-- tools:start -->
+| Tool | Category | Read-only | Description |
+|---|---|---|---|
+| `list_proxy_hosts` | Proxy hosts | yes | List proxy hosts configured in NPM, including their current status. |
+| `get_proxy_host` | Proxy hosts | yes | Fetch one proxy host by ID, including its configured fields and current status. |
+| `create_proxy_host` | Proxy hosts |  | Create a proxy host that routes the supplied domains to an HTTP or HTTPS upstream. |
+| `create_proxy_host_with_letsencrypt` | Proxy hosts |  | Request a Let's Encrypt certificate, then create a proxy host using that certificate with HTTPS forced. |
+| `update_proxy_host` | Proxy hosts |  | Update writable settings on an existing proxy host by ID. |
+| `delete_proxy_host` | Proxy hosts |  | Permanently delete a proxy host by ID, removing its configured domain routing from NPM. |
+| `enable_proxy_host` | Proxy hosts |  | Enable a disabled proxy host by ID so NPM serves its configured domain routing again. |
+| `disable_proxy_host` | Proxy hosts |  | Disable a proxy host by ID while retaining its configuration. |
+| `list_certificates` | Certificates | yes | List SSL certificates known to NPM, including expiry information when provided by NPM. |
+| `get_certificate` | Certificates | yes | Fetch one certificate by ID, including provider, domain names, expiry and meta. |
+| `create_letsencrypt_cert` | Certificates |  | Request a new Let's Encrypt certificate for the supplied domains, over HTTP-01 by default or DNS-01 with dns_challenge=True (required for wildcards). |
+| `delete_certificate` | Certificates |  | Permanently delete a certificate by ID, for example one left behind when create_proxy_host_with_letsencrypt fails at the proxy step. |
+| `renew_certificate` | Certificates |  | Request renewal of an existing certificate by ID. |
+| `list_access_lists` | Access lists | yes | List access lists configured in NPM. |
+| `get_access_list` | Access lists | yes | Fetch one access list by ID, including its client rules and basic-auth user metadata. |
+| `create_access_list` | Access lists |  | Create an access list containing optional IP allow/deny rules and basic-auth users. |
+| `update_access_list` | Access lists |  | Update writable fields on an existing access list by ID, including client rules and basic-auth users. |
+| `delete_access_list` | Access lists |  | Permanently delete an access list by ID from NPM. |
+| `list_redirection_hosts` | Redirection hosts | yes | List configured redirection hosts and their current status. |
+| `get_redirection_host` | Redirection hosts | yes | Fetch one redirection host by ID with its configured destination and status. |
+| `create_redirection_host` | Redirection hosts |  | Create a host that redirects requests for domains to a destination using the selected HTTP status. |
+| `update_redirection_host` | Redirection hosts |  | Update writable settings on an existing redirection host by ID. |
+| `delete_redirection_host` | Redirection hosts |  | Permanently delete a redirection host by ID, removing its redirect configuration from NPM. |
+| `enable_redirection_host` | Redirection hosts |  | Enable a disabled redirection host by ID so NPM serves its redirect again. |
+| `disable_redirection_host` | Redirection hosts |  | Disable a redirection host by ID while keeping its configuration in NPM. |
+| `list_streams` | Streams | yes | List configured TCP/UDP streams and their current status. |
+| `get_stream` | Streams | yes | Fetch one TCP/UDP stream by ID, including its forwarding ports and protocol settings. |
+| `create_stream` | Streams |  | Create a TCP/UDP port forward from an incoming port to a destination host and port. |
+| `update_stream` | Streams |  | Update writable port, destination, or protocol fields on an existing stream by ID. |
+| `delete_stream` | Streams |  | Permanently delete a TCP/UDP stream by ID; NPM stops forwarding that port immediately and this cannot be undone. |
+| `enable_stream` | Streams |  | Enable a disabled TCP/UDP stream by ID so NPM forwards its incoming port again. |
+| `disable_stream` | Streams |  | Disable a TCP/UDP stream by ID while retaining its forwarding configuration. |
+| `find_host_by_domain` | Diagnostics | yes | Find proxy hosts, redirection hosts, and certificates serving a domain using exact or wildcard matching. |
+| `list_expiring_certificates` | Diagnostics | yes | List certificates expiring within the requested UTC time window, including certificates already expired, sorted by expiry. |
+<!-- tools:end -->
+
+The table is generated by [`docs/tools_table.py`](docs/tools_table.py) from the registered tools; `tests/test_readme.py` fails if it drifts. Read-only tools are the ones `NPM_READ_ONLY` keeps.
 
 List tools support optional server-side filtering after fetching from NPM: `domain` matches a case-insensitive substring in any domain name for proxy hosts, redirection hosts, and certificates; `enabled` filters proxy hosts, redirection hosts, and streams by status. All four accept `compact=True` to return only summary fields. Filters combine, and calls without arguments return the full, unchanged NPM list. For example, `list_proxy_hosts(domain="example", enabled=True, compact=True)` lists enabled hosts matching "example" with compact output.
 
@@ -63,7 +96,7 @@ Competitor facts below come only from their linked READMEs fetched with `gh api 
 
 | Repository | Tool count documented | Dry-run support | Transport | Auth guard |
 |---|---:|---|---|---|
-| [euisuh (this server)](https://github.com/euisuh/nginx-proxy-manager-mcp) | 32 | `dry_run` on all mutating tools | stdio, SSE | Optional SSE bearer token (`MCP_BEARER_TOKEN`); `/healthz` exempt |
+| [euisuh (this server)](https://github.com/euisuh/nginx-proxy-manager-mcp) | 34 | `dry_run` on all mutating tools | stdio, SSE | Optional SSE bearer token (`MCP_BEARER_TOKEN`); `/healthz` exempt |
 | [b3nw](https://github.com/b3nw/nginx-proxy-manager-mcp/blob/725d323b96c5d4e88790b8c88ea790a1133fc2d1/README.md) | 14 named tools (13 catalog rows plus `list_instances`) | not documented | stdio, HTTP | HTTP bearer token (`NPM_MCP_AUTH_TOKEN`) |
 | [omichelbraga](https://github.com/omichelbraga/nginx-proxy-manager-mcp/blob/c6568f0f090c8a087ac9f3a56ac468c139e0a3cb/README.md) | 66 | DELETE without `confirm: true` previews affected resources; general `dry_run` not documented | stdio, Streamable HTTP | Optional bearer token (`NPM_MCP_BEARER_TOKEN`); unset means no inbound auth |
 | [drmogie](https://github.com/drmogie/nginx-proxy-manager-mcp/blob/91c4176b544de6b64b9d16ff6dc891a352951145/README.md) | 4 named tools (`npm_status`, `npm_hosts`, `npm_audit_log`, `npm_call`) | Changes show what will be sent and require `confirm`; `dry_run` not documented | not documented | not documented |
@@ -78,7 +111,7 @@ The bundled `docker-compose.yml` starts both Nginx Proxy Manager and this MCP si
 git clone https://github.com/euisuh/nginx-proxy-manager-mcp.git
 cd nginx-proxy-manager-mcp
 cp .env.example .env
-# edit .env — NPM_EMAIL / NPM_PASSWORD must be an existing NPM admin account
+# edit .env — NPM_EMAIL / NPM_PASSWORD of an existing NPM user (a dedicated non-admin user works; see Security)
 docker compose up -d
 ```
 
@@ -103,10 +136,12 @@ services:
       - "127.0.0.1:8000:8000"
 ```
 
-Register the SSE server with Claude Code:
+Register the SSE server with Claude Code (without `--transport sse`, `claude mcp add` treats the URL as a command to run):
 
 ```bash
-claude mcp add npm http://localhost:8000/sse
+claude mcp add --transport sse npm http://localhost:8000/sse
+# with MCP_BEARER_TOKEN set:
+claude mcp add --transport sse npm http://localhost:8000/sse -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 Or add it manually to an MCP client config:
@@ -154,6 +189,38 @@ Or install it into an isolated environment:
 pipx install nginx-proxy-manager-mcp-server
 ```
 
+The published 0.6.0 wheel requires Python 3.12+; the source supports Python 3.10+.
+
+Claude Desktop (`claude_desktop_config.json`) launching it with uvx:
+
+```json
+{
+  "mcpServers": {
+    "nginx-proxy-manager": {
+      "command": "uvx",
+      "args": ["nginx-proxy-manager-mcp-server"],
+      "env": {
+        "NPM_URL": "http://localhost:81",
+        "NPM_EMAIL": "mcp@example.com",
+        "NPM_PASSWORD": "...",
+        "MCP_TRANSPORT": "stdio"
+      }
+    }
+  }
+}
+```
+
+Claude Code, same launch:
+
+```bash
+claude mcp add npm \
+  -e NPM_URL=http://localhost:81 -e NPM_EMAIL=mcp@example.com -e NPM_PASSWORD=... \
+  -e MCP_TRANSPORT=stdio \
+  -- uvx nginx-proxy-manager-mcp-server
+```
+
+To check a launch without touching NPM, list tools: tool listing makes no NPM request, and NPM is contacted on the first tool call.
+
 ## Quick start: stdio
 
 Use stdio when you want the MCP client to launch the server process directly instead of talking to a sidecar.
@@ -193,8 +260,8 @@ Example client config:
 | Variable | Required | Default | Description |
 |---|---:|---|---|
 | `NPM_URL` | yes | — | Base URL of the NPM admin API (`http://app:81` inside Docker) |
-| `NPM_EMAIL` | yes | — | NPM admin account email |
-| `NPM_PASSWORD` | yes | — | NPM admin account password |
+| `NPM_EMAIL` | yes | — | Email of the NPM user the server logs in as (see [NPM credential scope](#npm-credential-scope)) |
+| `NPM_PASSWORD` | yes | — | That user's password |
 | `NPM_READ_ONLY` | no | disabled | `1`, `true`, or `yes` (case-insensitive) registers only `list_`, `get_`, and `find_` tools; all other values disable read-only mode |
 | `MCP_TRANSPORT` | no | `sse` | MCP transport: `sse` or `stdio` |
 | `MCP_HOST` | no | `127.0.0.1` | Bind address for SSE mode; Docker Compose sets `0.0.0.0` inside the container while publishing only to localhost |
@@ -206,6 +273,15 @@ Set `NPM_READ_ONLY=true` to expose only read-only tools.
 Missing required variables make the server exit with a clear error at startup rather than fail on the first API call.
 
 SSE mode also exposes `GET /healthz`, an unauthenticated liveness endpoint that returns a small JSON response. It does not contact NPM or validate credentials; use it for container and reverse-proxy health checks only.
+
+## NPM compatibility
+
+Request bodies follow the JSON schemas in NPM's `backend/schema/` and were checked against tags v2.12.6, v2.13.0, and v2.16.0. NPM rejects unknown fields (`additionalProperties: false`), so version differences matter:
+
+- NPM 2.13.0 removed `meta.letsencrypt_email` and `meta.letsencrypt_agree` and uses the NPM user's account email for Let's Encrypt. The server reads the version once from the unauthenticated `GET /api/` and only sends those fields to NPM older than 2.13; there, `email` is required.
+- Update tools send only the fields in NPM's PUT schema (see [#19](https://github.com/euisuh/nginx-proxy-manager-mcp/issues/19)).
+
+These checks are against schema files and mocked tests, not a live NPM instance.
 
 ## Architecture
 
@@ -223,7 +299,7 @@ SSE mode also exposes `GET /healthz`, an unauthenticated liveness endpoint that 
 ```
 
 - `nginx_proxy_manager_mcp/server.py` validates required env vars, builds the FastMCP app, registers every tool module, and serves either SSE or stdio.
-- `nginx_proxy_manager_mcp/npm_client.py` wraps `httpx`, exchanges the admin email/password for a JWT on first use, caches the token in memory, and re-authenticates on `401`.
+- `nginx_proxy_manager_mcp/npm_client.py` wraps `httpx`, exchanges the email/password for a JWT on first use, caches the token in memory, and re-authenticates once on `401`. NPM errors become `NPMAPIError` with NPM's own message; transport failures become `NPMConnectionError` naming `NPM_URL`.
 - `nginx_proxy_manager_mcp/tools/` keeps one module per NPM resource. Adding a resource means adding one `register_*_tools(mcp, client)` function and one registration line.
 
 ## Development
@@ -249,14 +325,27 @@ The Docker workflow also builds pull requests without pushing an image, so packa
 
 ## Security
 
-Anything that can reach this MCP server has admin-level control over your proxy hosts and certificates.
+Anything that can reach this MCP server has the NPM permissions of the account in `NPM_EMAIL`, so it can change proxy hosts and certificates.
+
+### NPM credential scope
+
+The server needs no NPM admin rights. It only calls `/api/tokens`, `/api/nginx/*`, and the unauthenticated `GET /api/`. It never touches users, settings, or the audit log. Create a dedicated NPM user (Users → Add User) instead of reusing your admin login:
+
+- Permissions are per resource: proxy hosts, redirection hosts, streams, access lists, and certificates, each `manage`, `view`, or `hidden` (NPM `permission-object.json`). Grant `manage` only where the assistant should make changes.
+- Item visibility `all` lets the user see hosts created by others; `user` limits it to items it created.
+- For an inspect-only setup, pair a `view`-only NPM user with `NPM_READ_ONLY=true`. NPM enforces the first and the server enforces the second.
+- On NPM 2.13+, Let's Encrypt registers with this user's email, so give it a real address.
+
+### Deployment
 
 - Do not expose the MCP endpoint publicly.
 - Keep the Docker port bound to `127.0.0.1` unless you have another trusted network boundary.
 - Bare SSE runs bind to `127.0.0.1` by default; set `MCP_HOST=0.0.0.0` only behind a trusted network boundary.
 - Set `MCP_BEARER_TOKEN` for SSE deployments that can be reached by anything beyond the local machine, and configure clients to send `Authorization: Bearer YOUR_TOKEN`.
 - Use environment variables or a secrets manager for NPM credentials; do not commit `.env`.
-- The NPM admin JWT lives in process memory and is never written to disk.
+- The NPM JWT lives in process memory, is sent only in the `Authorization` header, and is never logged or written to disk. Error messages carry NPM's error text and URL, not request headers or bodies.
+- `create_letsencrypt_cert` with DNS-01 takes the DNS provider credentials as a tool argument, so they appear in the MCP client's transcript. NPM never returns them, and dry-run previews show `<redacted>`.
+- `get_access_list` drops NPM's password `hint` field, which reveals the first character and length of each basic-auth password.
 - The container runs as a non-root user.
 
 See [SECURITY.md](SECURITY.md) for reporting and deployment guidance.
@@ -272,8 +361,10 @@ See [ROADMAP.md](ROADMAP.md). Near-term priorities are PyPI publishing, MCP dire
 
 ## Limitations
 
-- Covers proxy hosts, redirection hosts, streams, certificates, and access lists only. 404 hosts, users, audit log, and settings are not implemented yet.
-- Certificate creation supports Let's Encrypt HTTP-01 only — no DNS-01 challenge and no custom certificate upload yet.
+- Covers proxy hosts, redirection hosts, streams, certificates, and access lists only. 404 hosts, users, audit log, and settings are not implemented.
+- Certificates: Let's Encrypt (HTTP-01, or DNS-01 via a certbot DNS plugin NPM knows). No custom certificate upload or download.
+- `update_access_list` replaces basic-auth users wholesale when `items` is given, and each item needs its password (NPM cannot return stored passwords).
+- No integration test against a live NPM container; request shapes are checked against NPM's schema files and mocked tests.
 - One NPM instance per server process; there is no multi-tenant or multi-host routing.
 - Optional SSE bearer-token auth protects the HTTP endpoint, but there is no per-tool authorization after a client is authenticated.
 - `/healthz` reports only process liveness, not NPM reachability.
@@ -284,9 +375,10 @@ See [ROADMAP.md](ROADMAP.md). Near-term priorities are PyPI publishing, MCP dire
 Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md). Adding a new NPM resource follows a fixed shape:
 
 1. Create `nginx_proxy_manager_mcp/tools/<resource>.py` with a `register_<resource>_tools(mcp, client)` function.
-2. Register it in `build_server()` in `nginx_proxy_manager_mcp/server.py`.
+2. Register it in `register_all()` in `nginx_proxy_manager_mcp/server.py`.
 3. Add `tests/test_<resource>.py` covering each tool with respx-mocked NPM responses.
-4. Run `ruff check .` and `pytest -q`.
+4. Regenerate the README tool table with `python docs/tools_table.py`.
+5. Run `ruff check .` and `pytest -q`.
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org/).
 

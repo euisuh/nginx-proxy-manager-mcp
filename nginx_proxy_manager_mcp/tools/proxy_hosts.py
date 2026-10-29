@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 from nginx_proxy_manager_mcp.tools import register_tools
 from nginx_proxy_manager_mcp.tools.filters import filter_items
-from nginx_proxy_manager_mcp.tools.payloads import update_payload
+from nginx_proxy_manager_mcp.tools.payloads import letsencrypt_payload, update_payload
 from nginx_proxy_manager_mcp.tools.previews import dry_run_preview
 from nginx_proxy_manager_mcp.validation import (
     validate_domain_names,
@@ -101,11 +101,11 @@ class ProxyHostTools:
         forward_scheme: Annotated[str, Field(description="Upstream scheme: http or https.")],
         forward_host: Annotated[str, Field(description="Upstream hostname or IP address.")],
         forward_port: Annotated[int, Field(description="Upstream TCP port number.")],
-        email: Annotated[str, Field(description="Email address supplied to Let's Encrypt for certificate requests.")],
         access_list_id: Annotated[Optional[int], Field(description="NPM access-list ID to attach; omit for no access list.")] = None,
         block_exploits: Annotated[bool, Field(description="Whether NPM enables its exploit-blocking option.")] = True,
         caching_enabled: Annotated[bool, Field(description="Whether NPM enables proxy caching.")] = False,
         allow_websocket_upgrade: Annotated[bool, Field(description="Whether NPM allows WebSocket upgrades.")] = False,
+        email: Annotated[Optional[str], Field(description="Let's Encrypt account email. Required on NPM before 2.13; ignored on 2.13+, where NPM uses the NPM user's account email.")] = None,
         dry_run: Annotated[bool, Field(description="When True, return the exact request preview without changing NPM.")] = False,
     ) -> dict:
         """Request a Let's Encrypt certificate, then create a proxy host using that certificate with HTTPS forced. Use this for a new TLS-enabled proxy; use create_proxy_host when a certificate already exists or HTTPS forcing is not wanted. This triggers a certificate request before creating the host; failures report failed_step and any created certificate. Returns ok plus certificate and proxy_host objects on success. Set dry_run=True to preview the exact request without changing NPM."""
@@ -113,17 +113,10 @@ class ProxyHostTools:
         validate_forward_scheme(forward_scheme)
         validate_host(forward_host, "forward_host")
         validate_port(forward_port, "forward_port")
-        validate_email(email)
+        if email is not None:
+            validate_email(email)
         validate_optional_positive_id(access_list_id, "access_list_id")
-        cert_payload = {
-            "provider": "letsencrypt",
-            "domain_names": domain_names,
-            "meta": {
-                "letsencrypt_email": email,
-                "letsencrypt_agree": True,
-                "dns_challenge": False,
-            },
-        }
+        cert_payload = letsencrypt_payload(self.client, domain_names, email)
         proxy_payload = {
             "domain_names": domain_names,
             "forward_scheme": forward_scheme,
@@ -195,8 +188,8 @@ class ProxyHostTools:
         forward_host: Annotated[Optional[str], Field(description="Upstream hostname or IP address. For updates, omit to keep the current value.")] = None,
         forward_port: Annotated[Optional[int], Field(description="Upstream TCP port number. For updates, omit to keep the current value.")] = None,
         ssl_forced: Annotated[Optional[bool], Field(description="Whether NPM redirects HTTP requests to HTTPS. For updates, omit to keep the current value.")] = None,
-        certificate_id: Annotated[Optional[int], Field(description="NPM certificate ID to attach. Omit to keep the current value.")] = None,
-        access_list_id: Annotated[Optional[int], Field(description="NPM access-list ID to attach. Omit to keep the current value.")] = None,
+        certificate_id: Annotated[Optional[int], Field(description="NPM certificate ID to attach, or 0 to detach. Omit to keep the current value.")] = None,
+        access_list_id: Annotated[Optional[int], Field(description="NPM access-list ID to attach, or 0 to detach. Omit to keep the current value.")] = None,
         block_exploits: Annotated[Optional[bool], Field(description="Whether NPM enables its exploit-blocking option. For updates, omit to keep the current value.")] = None,
         caching_enabled: Annotated[Optional[bool], Field(description="Whether NPM enables proxy caching. For updates, omit to keep the current value.")] = None,
         allow_websocket_upgrade: Annotated[Optional[bool], Field(description="Whether NPM allows WebSocket upgrades. For updates, omit to keep the current value.")] = None,
@@ -212,8 +205,8 @@ class ProxyHostTools:
             validate_host(forward_host, "forward_host")
         if forward_port is not None:
             validate_port(forward_port, "forward_port")
-        validate_optional_positive_id(certificate_id, "certificate_id")
-        validate_optional_positive_id(access_list_id, "access_list_id")
+        validate_optional_positive_id(certificate_id or None, "certificate_id")  # 0 detaches
+        validate_optional_positive_id(access_list_id or None, "access_list_id")  # 0 detaches
         existing = self.client.get(f"/nginx/proxy-hosts/{id}")
         updates = {
             k: v

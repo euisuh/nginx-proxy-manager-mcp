@@ -5,7 +5,9 @@ from nginx_proxy_manager_mcp.tools.proxy_hosts import ProxyHostTools
 
 @pytest.fixture
 def client():
-    return MagicMock()
+    c = MagicMock()
+    c.npm_version.return_value = (2, 16)
+    return c
 
 
 @pytest.fixture
@@ -62,6 +64,7 @@ def test_create_proxy_host_dry_run_does_not_post(tools, client):
 
 
 def test_create_proxy_host_with_letsencrypt_success(tools, client):
+    client.npm_version.return_value = (2, 12)
     client.post.side_effect = [
         {"id": 5, "provider": "letsencrypt"},
         {"id": 10, "domain_names": ["new.example.com"]},
@@ -82,6 +85,18 @@ def test_create_proxy_host_with_letsencrypt_success(tools, client):
     assert proxy_call.args == ("/nginx/proxy-hosts",)
     assert proxy_call.kwargs["json"]["certificate_id"] == 5
     assert proxy_call.kwargs["json"]["ssl_forced"] is True
+
+
+def test_create_proxy_host_with_letsencrypt_npm_2_13_cert_payload(tools, client):
+    client.post.side_effect = [{"id": 5}, {"id": 10}]
+    tools.create_proxy_host_with_letsencrypt(
+        domain_names=["new.example.com"],
+        forward_scheme="http",
+        forward_host="192.168.1.10",
+        forward_port=3000,
+    )
+    cert_call = client.post.call_args_list[0]
+    assert cert_call.kwargs["json"]["meta"] == {"dns_challenge": False}
 
 
 def test_create_proxy_host_with_letsencrypt_dry_run_does_not_post(tools, client):
@@ -239,3 +254,16 @@ def test_list_proxy_hosts_filters(tools, client, kwargs, expected_ids):
         assert result is items
     assert items == original
     client.get.assert_called_once_with("/nginx/proxy-hosts")
+
+
+def test_update_proxy_host_zero_detaches_certificate_and_access_list(tools, client):
+    client.get.return_value = {"id": 1, "certificate_id": 5, "access_list_id": 2}
+    result = tools.update_proxy_host(1, certificate_id=0, access_list_id=0, dry_run=True)
+    assert result["json"]["certificate_id"] == 0
+    assert result["json"]["access_list_id"] == 0
+
+
+def test_update_proxy_host_rejects_negative_certificate_id(tools, client):
+    with pytest.raises(ValueError, match="certificate_id"):
+        tools.update_proxy_host(1, certificate_id=-1)
+    client.get.assert_not_called()

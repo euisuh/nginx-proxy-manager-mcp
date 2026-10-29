@@ -7,13 +7,16 @@ name = "nginx-proxy-manager-mcp-server"
 version = "0.6.0"
 description = "MCP server for Nginx Proxy Manager: proxy hosts, certificates, streams and access lists with dry-run previews"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 license = "MIT"
 authors = [{name = "Euisuh Jeong"}]
 keywords = ["mcp", "nginx-proxy-manager", "homelab", "reverse-proxy"]
 classifiers = [
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: System :: Systems Administration",
 ]
 dependencies = [
@@ -34,7 +37,7 @@ nginx-proxy-manager-mcp-server = "nginx_proxy_manager_mcp.server:main"
 include = ["nginx_proxy_manager_mcp", "nginx_proxy_manager_mcp.*"]
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py310"
 line-length = 100
 
 [tool.ruff.lint]

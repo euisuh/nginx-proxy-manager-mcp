@@ -1,7 +1,7 @@
 import pytest
 import respx
 import httpx
-from nginx_proxy_manager_mcp.npm_client import NPMAPIError, NPMClient
+from nginx_proxy_manager_mcp.npm_client import NPMAPIError, NPMClient, NPMConnectionError
 
 
 @pytest.fixture(autouse=True)
@@ -122,3 +122,77 @@ def test_error_with_non_json_body_uses_response_text():
     with pytest.raises(NPMAPIError) as exc:
         client.get("/nginx/proxy-hosts")
     assert "bad gateway" in str(exc.value)
+
+
+@respx.mock
+def test_npm_nested_error_message_is_extracted():
+    # NPM's express error handler responds with {"error": {"code": ..., "message": ...}}.
+    respx.post("http://npm.test/api/tokens").mock(
+        return_value=httpx.Response(200, json={"token": "tok"})
+    )
+    respx.put("http://npm.test/api/nginx/proxy-hosts/1").mock(
+        return_value=httpx.Response(
+            400, json={"error": {"code": 400, "message": "data must NOT have additional properties"}}
+        )
+    )
+    client = NPMClient()
+    with pytest.raises(NPMAPIError) as exc:
+        client.put("/nginx/proxy-hosts/1", json={})
+    assert exc.value.detail == "data must NOT have additional properties"
+
+
+@respx.mock
+def test_connection_error_is_actionable_and_redacted():
+    respx.post("http://npm.test/api/tokens").mock(side_effect=httpx.ConnectError("refused"))
+    client = NPMClient()
+    with pytest.raises(NPMConnectionError) as exc:
+        client.get("/nginx/proxy-hosts")
+    message = str(exc.value)
+    assert "http://npm.test" in message and "refused" in message
+    assert "testpass" not in message
+
+
+@respx.mock
+def test_token_is_sent_only_in_authorization_header():
+    respx.post("http://npm.test/api/tokens").mock(
+        return_value=httpx.Response(200, json={"token": "secret-jwt"})
+    )
+    route = respx.get("http://npm.test/api/nginx/streams").mock(
+        return_value=httpx.Response(200, json=[])
+    )
+    NPMClient().get("/nginx/streams")
+    request = route.calls.last.request
+    assert request.headers["authorization"] == "Bearer secret-jwt"
+    assert "secret-jwt" not in str(request.url)
+
+
+@respx.mock
+def test_npm_version_is_read_once_without_auth():
+    route = respx.get("http://npm.test/api/").mock(
+        return_value=httpx.Response(
+            200, json={"status": "OK", "version": {"major": 2, "minor": 12, "revision": 6}}
+        )
+    )
+    client = NPMClient()
+    assert client.npm_version() == (2, 12)
+    assert client.npm_version() == (2, 12)
+    assert route.call_count == 1
+    assert "authorization" not in route.calls.last.request.headers
+    assert client.token is None
+
+
+@respx.mock
+def test_npm_version_missing_defaults_to_current_schema():
+    respx.get("http://npm.test/api/").mock(return_value=httpx.Response(200, json={"status": "OK"}))
+    assert NPMClient().npm_version() >= (2, 13)
+
+
+@respx.mock
+def test_empty_success_body_returns_none():
+    respx.post("http://npm.test/api/tokens").mock(
+        return_value=httpx.Response(200, json={"token": "tok"})
+    )
+    respx.post("http://npm.test/api/nginx/proxy-hosts/1/enable").mock(
+        return_value=httpx.Response(200)
+    )
+    assert NPMClient().post("/nginx/proxy-hosts/1/enable") is None

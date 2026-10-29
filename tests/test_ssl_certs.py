@@ -5,7 +5,9 @@ from nginx_proxy_manager_mcp.tools.ssl_certs import SSLCertTools
 
 @pytest.fixture
 def client():
-    return MagicMock()
+    c = MagicMock()
+    c.npm_version.return_value = (2, 16)
+    return c
 
 
 @pytest.fixture
@@ -20,7 +22,8 @@ def test_list_certificates(tools, client):
     client.get.assert_called_once_with("/nginx/certificates")
 
 
-def test_create_letsencrypt_cert(tools, client):
+def test_create_letsencrypt_cert_legacy_npm_sends_email(tools, client):
+    client.npm_version.return_value = (2, 12)
     client.post.return_value = {"id": 5, "provider": "letsencrypt"}
     result = tools.create_letsencrypt_cert(
         domain_names=["example.com", "www.example.com"],
@@ -35,6 +38,7 @@ def test_create_letsencrypt_cert(tools, client):
 
 
 def test_create_letsencrypt_cert_dry_run_does_not_post(tools, client):
+    client.npm_version.return_value = (2, 12)
     result = tools.create_letsencrypt_cert(
         domain_names=["example.com", "www.example.com"],
         email="admin@example.com",
@@ -45,6 +49,37 @@ def test_create_letsencrypt_cert_dry_run_does_not_post(tools, client):
     assert result["path"] == "/nginx/certificates"
     assert result["json"]["domain_names"] == ["example.com", "www.example.com"]
     assert result["json"]["meta"]["letsencrypt_email"] == "admin@example.com"
+    client.post.assert_not_called()
+
+
+def test_create_letsencrypt_cert_npm_2_13_omits_removed_meta_fields(tools, client):
+    # NPM >= 2.13 rejects letsencrypt_email/letsencrypt_agree (additionalProperties: false).
+    client.post.return_value = {"id": 6}
+    tools.create_letsencrypt_cert(domain_names=["example.com"], email="admin@example.com")
+    payload = client.post.call_args[1]["json"]
+    assert payload == {
+        "provider": "letsencrypt",
+        "domain_names": ["example.com"],
+        "meta": {"dns_challenge": False},
+    }
+
+
+def test_create_letsencrypt_cert_email_optional_on_npm_2_13(tools, client):
+    client.post.return_value = {"id": 6}
+    tools.create_letsencrypt_cert(domain_names=["example.com"])
+    assert "letsencrypt_email" not in client.post.call_args[1]["json"]["meta"]
+
+
+def test_create_letsencrypt_cert_legacy_npm_requires_email(tools, client):
+    client.npm_version.return_value = (2, 12)
+    with pytest.raises(ValueError, match="email is required"):
+        tools.create_letsencrypt_cert(domain_names=["example.com"])
+    client.post.assert_not_called()
+
+
+def test_create_letsencrypt_cert_rejects_bad_email(tools, client):
+    with pytest.raises(ValueError, match="email"):
+        tools.create_letsencrypt_cert(domain_names=["example.com"], email="not-an-email")
     client.post.assert_not_called()
 
 

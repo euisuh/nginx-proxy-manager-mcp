@@ -13,6 +13,8 @@ This project is intentionally small: one MCP server that gives AI assistants saf
 - Clean internal `nginx_proxy_manager_mcp` Python package layout.
 - Python package build validation on release tags.
 - Smithery and Glama registry metadata files.
+- PyPI package via trusted publishing; listed on Glama, awesome-mcp-servers, the MCP Registry and MCPRush.
+- Integration CI job against a real NPM container (proxy hosts).
 - Optional bearer-token guard for SSE deployments.
 - Unauthenticated `/healthz` liveness endpoint for SSE sidecars.
 - Safer loopback default for bare SSE runs.
@@ -20,10 +22,9 @@ This project is intentionally small: one MCP server that gives AI assistants saf
 - NPM 2.13+ certificate request shape (version read from `GET /api/`).
 - Let's Encrypt DNS-01 / wildcard certificates; `get_certificate` and `delete_certificate`.
 
-## Next: distribution and MCP directory readiness
+## Next: distribution
 
-- Publish the built wheel to PyPI once trusted publishing is configured.
-- Submit the repository to Smithery, Glama, PulseMCP, and MCP.so.
+- Submit to Smithery, PulseMCP and MCP.so.
 
 ## Next: broader NPM coverage
 
@@ -36,7 +37,7 @@ This project is intentionally small: one MCP server that gives AI assistants saf
 - Optional allowlist for destructive tools.
 - Structured logs with request IDs and redacted credentials.
 - Readiness endpoint that verifies NPM API reachability without leaking credentials.
-- Integration test profile against an ephemeral NPM container.
+- Extend the live NPM integration tests beyond proxy hosts.
 
 ## Positioning
 

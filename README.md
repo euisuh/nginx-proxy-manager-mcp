@@ -5,7 +5,9 @@
 [![CI](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/ci.yml)
 [![Docker](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/docker.yml/badge.svg)](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/docker.yml)
 [![Python Package](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/python-package.yml/badge.svg)](https://github.com/euisuh/nginx-proxy-manager-mcp/actions/workflows/python-package.yml)
+[![PyPI](https://img.shields.io/pypi/v/nginx-proxy-manager-mcp-server)](https://pypi.org/project/nginx-proxy-manager-mcp-server/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Glama MCP server](https://glama.ai/mcp/servers/euisuh/nginx-proxy-manager-mcp/badges/score.svg)](https://glama.ai/mcp/servers/euisuh/nginx-proxy-manager-mcp)
 
 An MCP server for [Nginx Proxy Manager](https://nginxproxymanager.com/). It lets Claude and other MCP clients manage proxy hosts, redirection hosts, TCP/UDP streams, Let's Encrypt certificates, and access lists through typed tools instead of clicking through the NPM admin UI.
 
@@ -352,19 +354,24 @@ See [SECURITY.md](SECURITY.md) for reporting and deployment guidance.
 
 ## Roadmap
 
-See [ROADMAP.md](ROADMAP.md). Near-term priorities are PyPI publishing, MCP directory submission, broader NPM resource coverage, and integration tests.
+See [ROADMAP.md](ROADMAP.md). Near-term priorities are broader NPM resource coverage and operational hardening.
 
-## Directory metadata
+## Listings
 
-- [`smithery.yaml`](smithery.yaml) describes stdio launch configuration for Smithery-style MCP directories.
-- [`glama.json`](glama.json) declares the repository maintainer for Glama MCP registry verification.
+- [PyPI](https://pypi.org/project/nginx-proxy-manager-mcp-server/): `nginx-proxy-manager-mcp-server`.
+- [Glama](https://glama.ai/mcp/servers/euisuh/nginx-proxy-manager-mcp): claimed listing, rated A for license, quality and maintenance.
+- [awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers): listed under Cloud Platforms.
+- [MCP Registry](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.euisuh/nginx-proxy-manager-mcp): `io.github.euisuh/nginx-proxy-manager-mcp`.
+- [MCPRush](https://mcprush.com/euisuh/nginx-proxy-manager-mcp).
+
+Directory metadata lives in [`server.json`](server.json) (MCP Registry), [`glama.json`](glama.json) (Glama maintainer verification) and [`smithery.yaml`](smithery.yaml) (stdio launch config for Smithery-style directories).
 
 ## Limitations
 
 - Covers proxy hosts, redirection hosts, streams, certificates, and access lists only. 404 hosts, users, audit log, and settings are not implemented.
 - Certificates: Let's Encrypt (HTTP-01, or DNS-01 via a certbot DNS plugin NPM knows). No custom certificate upload or download.
 - `update_access_list` replaces basic-auth users wholesale when `items` is given, and each item needs its password (NPM cannot return stored passwords).
-- No integration test against a live NPM container; request shapes are checked against NPM's schema files and mocked tests.
+- Integration tests against a live NPM container (CI, NPM 2.16.0) cover only the version probe and proxy-host create/list/delete. Other request shapes are checked against NPM's schema files and mocked tests.
 - One NPM instance per server process; there is no multi-tenant or multi-host routing.
 - Optional SSE bearer-token auth protects the HTTP endpoint, but there is no per-tool authorization after a client is authenticated.
 - `/healthz` reports only process liveness, not NPM reachability.
